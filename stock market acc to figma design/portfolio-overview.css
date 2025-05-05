@@ -1,0 +1,177 @@
+/* Reset and base styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', Arial, sans-serif;
+  }
+  
+  body {
+    background: #111;
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .container {
+    width: 100vw;
+    height: 100vh;
+    background: #18181b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .portfolio-card {
+    background: #18181b;
+    border-radius: 28px;
+    padding: 40px 48px;
+    width: 700px;
+    box-shadow: 0 2px 32px 0 rgba(0,0,0,0.30);
+    position: relative;
+  }
+  
+  .portfolio-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+  }
+  
+  .portfolio-header h1 {
+    font-size: 2.1rem;
+    font-weight: 700;
+  }
+  
+  .portfolio-growth {
+    color: #35e47a;
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+  
+  .portfolio-main {
+    display: flex;
+    gap: 40px;
+  }
+  
+  .portfolio-value {
+    flex: 1;
+  }
+  
+  .value {
+    font-size: 2.8rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  
+  .label {
+    color: #aaa;
+    font-size: 1.1rem;
+    margin-bottom: 32px;
+  }
+  
+  .sectors {
+    list-style: none;
+    margin-top: 24px;
+  }
+  
+  .sectors li {
+    display: flex;
+    align-items: center;
+    margin-bottom: 18px;
+    font-size: 1.08rem;
+    color: #e5e5e5;
+    justify-content: space-between;
+    width: 220px;
+  }
+  
+  .dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 12px;
+  }
+  
+  .tech { background: #2986f5; }
+  .health { background: #9a4dff; }
+  .finance { background: #19e37d; }
+  .consumer { background: #fff; border: 1px solid #eee; }
+  .energy { background: #474d57; }
+  
+  .percent {
+    color: #aaa;
+    margin-left: 8px;
+    font-weight: 600;
+  }
+  
+  .performance-card {
+    background: #1c1c1f;
+    border-radius: 20px;
+    padding: 32px 32px 24px 32px;
+    min-width: 260px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 2px 16px 0 rgba(0,0,0,0.18);
+  }
+  
+  .performance-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 1.18rem;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 24px;
+  }
+  
+  .performance-ytd {
+    color: #35e47a;
+    font-size: 1rem;
+    font-weight: 500;
+  }
+  
+  .performance-metrics {
+    display: flex;
+    gap: 36px;
+  }
+  
+  .metric-label {
+    color: #aaa;
+    font-size: 1rem;
+    margin-bottom: 4px;
+  }
+  
+  .metric-value {
+    font-size: 1.45rem;
+    font-weight: 700;
+  }
+  
+  .gain {
+    color: #35e47a;
+  }
+  
+  .metric-sub {
+    color: #aaa;
+    font-size: 0.98rem;
+    margin-top: 2px;
+  }
+  
+  @media (max-width: 900px) {
+    .portfolio-card {
+      width: 98vw;
+      padding: 24px 8px;
+    }
+    .portfolio-main {
+      flex-direction: column;
+      gap: 24px;
+    }
+    .performance-card {
+      min-width: unset;
+      width: 100%;
+    }
+  }
+  

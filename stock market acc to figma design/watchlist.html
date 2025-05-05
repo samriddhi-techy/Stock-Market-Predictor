@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Watchlist</title>
+  <link rel="stylesheet" href="watchlist.css" />
+</head>
+<body>
+  <div class="container">
+    <p class="generated">Generated Design</p>
+
+    <div class="watchlist-card">
+      <div class="watchlist-header">
+        <div class="watchlist-title">
+          <span class="dot green"></span>
+          <h2>Watchlist</h2>
+        </div>
+        <button class="sort-btn">Sort by clicking headers</button>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Company</th>
+              <th>Ticker</th>
+              <th>Price</th>
+              <th>24h Change</th>
+              <th>AI Prediction</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <div class="company-info">
+                  <div class="avatar"></div>
+                  <div>
+                    <div class="company-name">Apple Inc</div>
+                    <div class="market-cap">Market Cap: $2.8T</div>
+                  </div>
+                </div>
+              </td>
+              <td><a href="#">AAPL</a></td>
+              <td>$185.92</td>
+              <td class="up">+2.4%</td>
+              <td><span class="tag bullish">Bullish</span></td>
+              <td><button class="remove-btn">✕</button></td>
+            </tr>
+            <tr>
+              <td>
+                <div class="company-info">
+                  <div class="avatar"></div>
+                  <div>
+                    <div class="company-name">Microsoft</div>
+                    <div class="market-cap">Market Cap: $2.9T</div>
+                  </div>
+                </div>
+              </td>
+              <td><a href="#">MSFT</a></td>
+              <td>$378.85</td>
+              <td class="down">-0.8%</td>
+              <td><span class="tag neutral">Neutral</span></td>
+              <td><button class="remove-btn">✕</button></td>
+            </tr>
+            <tr>
+              <td>
+                <div class="company-info">
+                  <div class="avatar"></div>
+                  <div>
+                    <div class="company-name">Tesla</div>
+                    <div class="market-cap">Market Cap: $788B</div>
+                  </div>
+                </div>
+              </td>
+              <td><a href="#">TSLA</a></td>
+              <td>$248.48</td>
+              <td class="up">+3.2%</td>
+              <td><span class="tag bullish">Bullish</span></td>
+              <td><button class="remove-btn">✕</button></td>
+            </tr>
+            <tr>
+              <td>
+                <div class="company-info">
+                  <div class="avatar"></div>
+                  <div>
+                    <div class="company-name">Amazon</div>
+                    <div class="market-cap">Market Cap: $1.5T</div>
+                  </div>
+                </div>
+              </td>
+              <td><a href="#">AMZN</a></td>
+              <td>$145.24</td>
+              <td class="down">-1.5%</td>
+              <td><span class="tag bearish">Bearish</span></td>
+              <td><button class="remove-btn">✕</button></td>
+            </tr>
+            <tr>
+              <td>
+                <div class="company-info">
+                  <div class="avatar"></div>
+                  <div>
+                    <div class="company-name">NVIDIA</div>
+                    <div class="market-cap">Market Cap: $1.2T</div>
+                  </div>
+                </div>
+              </td>
+              <td><a href="#">NVDA</a></td>
+              <td>$477.76</td>
+              <td class="up">+4.1%</td>
+              <td><span class="tag bullish">Bullish</span></td>
+              <td><button class="remove-btn">✕</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

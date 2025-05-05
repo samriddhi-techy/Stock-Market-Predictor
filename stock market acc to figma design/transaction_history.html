@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trading History Dashboard</title>
+  <link rel="stylesheet" href="transaction_history.css" />
+</head>
+<body>
+  <div class="container">
+    <h2 class="heading">Generated Design</h2>
+    <div class="card">
+      <div class="card-header">
+        <span class="dot blue"></span>
+        <span class="title">Trading History</span>
+        <div class="filters">
+          <div class="filter-group">
+            <button class="filter active">All Assets</button>
+            <button class="filter">Stocks</button>
+            <button class="filter">Crypto</button>
+          </div>
+          <div class="filter-group">
+            <button class="filter active">All Time</button>
+            <button class="filter">This Month</button>
+            <button class="filter">This Week</button>
+          </div>
+          <button class="export-btn">📥 Export CSV</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Asset</th>
+              <th>Type</th>
+              <th>Action</th>
+              <th>Quantity</th>
+              <th>Price</th>
+              <th>Profit/Loss</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>2024-01-15</td>
+              <td>AAPL</td>
+              <td>Stock</td>
+              <td class="buy">Buy</td>
+              <td>100</td>
+              <td>$185.92</td>
+              <td class="profit">+$1,250</td>
+            </tr>
+            <tr>
+              <td>2024-01-14</td>
+              <td>BTC</td>
+              <td>Crypto</td>
+              <td class="sell">Sell</td>
+              <td>0.5</td>
+              <td>$42,800</td>
+              <td class="loss">-$800</td>
+            </tr>
+            <tr>
+              <td>2024-01-12</td>
+              <td>NVDA</td>
+              <td>Stock</td>
+              <td class="buy">Buy</td>
+              <td>50</td>
+              <td>$547.1</td>
+              <td class="profit">+$3,200</td>
+            </tr>
+            <tr>
+              <td>2024-01-10</td>
+              <td>ETH</td>
+              <td>Crypto</td>
+              <td class="sell">Sell</td>
+              <td>2</td>
+              <td>$2,580</td>
+              <td class="profit">+$450</td>
+            </tr>
+            <tr>
+              <td>2024-01-08</td>
+              <td>MSFT</td>
+              <td>Stock</td>
+              <td class="sell">Sell</td>
+              <td>75</td>
+              <td>$390.27</td>
+              <td class="profit">+$2,800</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

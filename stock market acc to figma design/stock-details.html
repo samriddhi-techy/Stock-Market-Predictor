@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Apple Inc. Stock Detail</title>
+  <link rel="stylesheet" href="stock-details.css" />
+</head>
+<body>
+  <div class="container">
+    <p class="generated">Generated Design</p>
+
+    <div class="stock-card">
+      <div class="stock-header">
+        <div class="stock-info">
+          <div class="stock-avatar"></div>
+          <div>
+            <h1 class="stock-title">Apple Inc.</h1>
+            <div class="stock-meta">
+              <span class="dot green"></span> NASDAQ • Technology
+              <span class="market-status">Market Open</span>
+              <span class="timing">EST 09:30 - 16:00</span>
+            </div>
+          </div>
+        </div>
+        <div class="time-filters">
+          <button class="active">7D</button>
+          <button>1M</button>
+        </div>
+      </div>
+
+      <div class="price-section">
+        <h2 class="price">$185.25</h2>
+        <p class="price-change">
+          <span class="up">+2.75 (+1.51%)</span>
+          <span class="prev-close">vs Previous Close $182.50</span>
+        </p>
+      </div>
+
+      <div class="chart">
+        <!-- Simple placeholder chart using SVG -->
+        <svg viewBox="0 0 500 200" class="line-chart">
+          <polyline
+            fill="none"
+            stroke="#337eff"
+            stroke-width="2"
+            points="0,100 50,130 100,60 150,140 200,90 250,120 300,80 350,150 400,70 450,110 500,80"
+          />
+        </svg>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

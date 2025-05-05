@@ -1,0 +1,110 @@
+/* Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #0a0a0a;
+    color: #ffffff;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+  
+  .card {
+    background: rgba(20, 20, 20, 0.8);
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+    max-width: 500px;
+    width: 100%;
+    text-align: left;
+  }
+  
+  .title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    text-align: left;
+    margin-bottom: 12px;
+  }
+  
+  .gradient-text {
+    background: linear-gradient(to right, #4d90fe, #42f5b3);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .subtitle {
+    font-size: 1rem;
+    color: #ccc;
+    margin-bottom: 32px;
+  }
+  
+  .balance-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+  }
+  
+  .label {
+    font-size: 0.85rem;
+    color: #aaa;
+    margin-bottom: 8px;
+  }
+  
+  .balance {
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(to right, #4d90fe, #42f5b3);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .percentage-change {
+    color: #42f57b;
+    font-weight: 600;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+  }
+  
+  .arrow {
+    margin-left: 4px;
+  }
+  
+  .change-section {
+    margin-bottom: 30px;
+  }
+  
+  .change {
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+  
+  .details-btn {
+    background-color: #2a2a2a;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 14px 24px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  
+  .details-btn:hover {
+    background-color: #3d3d3d;
+  }
+  

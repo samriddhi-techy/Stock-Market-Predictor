@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Knowledge Base</title>
+  <link rel="stylesheet" href="helpCenter_chatbot.css" />
+</head>
+<body>
+  <div class="kb-container">
+    <h1>Knowledge Base</h1>
+    <input type="text" id="search" placeholder="Search topics..." />
+
+    <div class="categories">
+      <div class="card">📊 Portfolio Analysis<br><span>Review your current investments</span></div>
+      <div class="card">🧠 Investment Strategy<br><span>Plan your future investments</span></div>
+      <div class="card">⚖️ Risk Assessment<br><span>Evaluate your risk exposure</span></div>
+      <div class="card">📈 Market Updates<br><span>Latest market insights</span></div>
+    </div>
+  </div>
+
+  <!-- Chatbot -->
+  <div class="chatbot" id="chatbot">
+    <div class="chat-header">
+      <span class="status-dot"></span>
+      <span>Investment Assistant</span>
+      <span class="status">Online</span>
+    </div>
+    <div class="chat-body" id="chatBody">
+      <div class="msg bot">Hi there! 👋 How can I help you today?</div>
+    </div>
+    <div class="chat-footer">
+      <input type="text" id="chatInput" placeholder="Type your message..." />
+      <button id="sendBtn">Send ➤</button>
+    </div>
+  </div>
+
+  <script src="helpCenter_chatbot.js"></script>
+</body>
+</html>

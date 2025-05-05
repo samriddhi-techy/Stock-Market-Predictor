@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Account Type Selection</title>
+  <link rel="stylesheet" href="account-selection.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="steps">
+      <div class="step active">
+        <div class="circle">1</div>
+        <span>Account Type</span>
+      </div>
+      <div class="step active">
+        <div class="circle">2</div>
+        <span>Personal Info</span>
+      </div>
+      <div class="step">
+        <div class="circle">3</div>
+        <span>Verification</span>
+      </div>
+      <div class="step">
+        <div class="circle">4</div>
+        <span>Complete</span>
+      </div>
+    </div>
+
+    <h1 class="title">Choose Your <span class="gradient">Account Type</span></h1>
+    <p class="subtitle">Select the account type that best fits your trading needs</p>
+
+    <form class="account-options">
+      <label class="option">
+        <input type="radio" name="account" value="personal" />
+        <div class="content">
+          <div class="icon">👤</div>
+          <div>
+            <h3>Personal Account</h3>
+            <p>Perfect for individual traders. Access basic trading features and personal portfolio management.</p>
+          </div>
+        </div>
+      </label>
+
+      <label class="option">
+        <input type="radio" name="account" value="professional" />
+        <div class="content">
+          <div class="icon">📈</div>
+          <div>
+            <h3>Professional Account</h3>
+            <p>Advanced features for serious traders. Includes real-time analytics and priority support.</p>
+          </div>
+        </div>
+      </label>
+
+      <label class="option">
+        <input type="radio" name="account" value="institutional" />
+        <div class="content">
+          <div class="icon">🏢</div>
+          <div>
+            <h3>Institutional Account</h3>
+            <p>Enterprise-grade solutions for organizations. Full suite of trading tools and dedicated support team.</p>
+          </div>
+        </div>
+      </label>
+
+      <button type="submit" class="continue-btn">Continue</button>
+    </form>
+  </div>
+</body>
+</html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Market Intelligence Dashboard</title>
+  <link rel="stylesheet" href="market_heatmap-sector_overview.css"/>
+</head>
+<body>
+  <div class="dashboard">
+    <!-- Left Main Panel -->
+    <div class="main-panel">
+      <div class="section-header">
+        <span class="dot"></span>
+        <h2>Market Intelligence</h2>
+      </div>
+
+      <!-- Metrics -->
+      <div class="metrics">
+        <div class="metric"><label>Volatility Index</label><p>18.5</p></div>
+        <div class="metric"><label>Advance/Decline</label><p>1.45</p></div>
+        <div class="metric"><label>Market Breadth</label><p>0.72</p></div>
+        <div class="metric"><label>Trading Volume</label><p>$125.8B</p></div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters">
+        <button class="active">All News</button>
+        <button>Trending</button>
+        <button>Alerts</button>
+        <button class="active">24H</button>
+        <button>7D</button>
+      </div>
+
+      <!-- News Cards -->
+      <div class="news-card positive">
+        <div class="headline">Fed Signals Potential Rate Cuts in 2024</div>
+        <p>Federal Reserve officials indicated openness to reducing interest rates...</p>
+        <div class="meta">
+          <span>Bloomberg</span> • <span>2m ago</span> • 
+          <span class="tag">Monetary Policy</span>
+        </div>
+        <div class="confidence">
+          <span class="sentiment-tag green">positive</span>
+          <span>high impact</span>
+          <span>AI Confidence: 85%</span>
+        </div>
+      </div>
+
+      <div class="news-card positive">
+        <div class="headline">Tech Stocks Rally on AI Breakthrough</div>
+        <p>Major tech companies surge following announcement of breakthrough...</p>
+        <div class="meta">
+          <span>Reuters</span> • <span>15m ago</span> • 
+          <span class="tag">Technology</span>
+        </div>
+        <div class="confidence">
+          <span class="sentiment-tag green">positive</span>
+          <span>high impact</span>
+          <span>AI Confidence: 92%</span>
+        </div>
+      </div>
+
+      <div class="news-card negative">
+        <div class="headline">Oil Prices Volatile Amid Middle East Tensions</div>
+        <p>Crude oil prices fluctuate as geopolitical tensions raise concerns...</p>
+        <div class="meta">
+          <span>Financial Times</span> • <span>45m ago</span> • 
+          <span class="tag">Energy</span>
+        </div>
+        <div class="confidence">
+          <span class="sentiment-tag red">negative</span>
+          <span>medium impact</span>
+          <span>AI Confidence: 78%</span>
+        </div>
+      </div>
+
+      <div class="news-card neutral">
+        <div class="headline">Global Supply Chain Pressures Ease</div>
+        <p>Latest indicators show significant improvement in global supply chain efficiency...</p>
+        <div class="meta">
+          <span>WSJ</span> • <span>1h ago</span> • 
+          <span class="tag">Economy</span>
+        </div>
+        <div class="confidence">
+          <span class="sentiment-tag gray">neutral</span>
+          <span>medium impact</span>
+          <span>AI Confidence: 55%</span>
+        </div>
+      </div>
+
+      <div class="news-card positive">
+        <div class="headline">Cryptocurrency Market Sees Institutional Surge</div>
+        <p>Major financial institutions increase crypto holdings amid regulatory clarity...</p>
+        <div class="meta">
+          <span>CoinDesk</span> • <span>2h ago</span> • 
+          <span class="tag">Crypto</span>
+        </div>
+        <div class="confidence">
+          <span class="sentiment-tag green">positive</span>
+          <span>medium impact</span>
+          <span>AI Confidence: 88%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Sidebar -->
+    <div class="sidebar">
+      <!-- Sentiment Analysis -->
+      <div class="panel">
+        <h3>Sentiment Analysis</h3>
+        <div class="bar-label">Overall Sentiment <span>65%</span></div>
+        <div class="bar blue" style="width: 65%"></div>
+        <div class="bar-label">Institutional <span>72%</span></div>
+        <div class="bar green" style="width: 72%"></div>
+        <div class="bar-label">Retail <span>58%</span></div>
+        <div class="bar purple" style="width: 58%"></div>
+        <div class="bar-label">Social Media <span>81%</span></div>
+        <div class="bar blue" style="width: 81%"></div>
+      </div>
+
+      <!-- Sector Performance -->
+      <div class="panel">
+        <h3>Sector Performance</h3>
+        <div class="sector">
+          <strong>Technology</strong> <span class="green">+2.8%</span>
+          <small>Volume: $12.4B • Sentiment: 85%</small><br>
+          <span>↑ NVDA ↓ INTC</span>
+        </div>
+        <div class="sector">
+          <strong>Healthcare</strong> <span class="green">+1.2%</span>
+          <small>Volume: $6.1B • Sentiment: 72%</small><br>
+          <span>↑ JNJ ↓ PFE</span>
+        </div>
+        <div class="sector">
+          <strong>Energy</strong> <span class="red">-0.9%</span>
+          <small>Volume: $6.2B • Sentiment: 45%</small><br>
+          <span>↑ XOM ↓ CVX</span>
+        </div>
+        <div class="sector">
+          <strong>Financials</strong> <span class="green">+1.8%</span>
+          <small>Volume: $9.3B • Sentiment: 68%</small><br>
+          <span>↑ JPM ↓ WFC</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

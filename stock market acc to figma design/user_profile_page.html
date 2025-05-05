@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Settings</title>
+    <link rel="stylesheet" href="user_profile_page.css">
+</head>
+<body>
+    <div class="profile-header">
+        <div class="profile-pic"></div>
+        <div>
+            <h2>Samriddhi Shah</h2>
+            <p>Product Designer · <span class="premium">Premium Member</span></p>
+            <button class="btn">View Profile</button>
+            <button class="btn blue">Change Password</button>
+        </div>
+    </div>
+
+    <div class="settings-section">
+        <h3>General</h3>
+        <div class="card">
+            <div class="card-section">
+                <h4>Personal Information</h4>
+                <button class="edit-btn">Edit</button>
+                <p>Name: Alex Thompson</p>
+                <p>Email: alex@example.com</p>
+                <p>Phone: +1 (555) 123-4567</p>
+                <p>Time Zone: Pacific Time (PT)</p>
+            </div>
+            <div class="card-section">
+                <h4>Preferences</h4>
+                <label><input type="checkbox" checked> Dark Mode</label>
+                <label><input type="checkbox" checked> Auto-save</label>
+                <label><input type="checkbox"> Sound Effects</label>
+            </div>
+            <div class="card-section">
+                <h4>Accessibility</h4>
+                <label>Font Size:
+                    <select>
+                        <option>Small</option>
+                        <option selected>Medium</option>
+                        <option>Large</option>
+                    </select>
+                </label>
+                <label><input type="checkbox" checked> Reduce Animations</label>
+            </div>
+            <div class="card-section">
+                <h4>Storage Usage</h4>
+                <div class="progress-bar">
+                    <div class="progress"></div>
+                </div>
+                <p>Used Space: 2.1 GB / 5 GB</p>
+                <label><input type="checkbox"> Auto-delete old files</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="settings-section">
+        <h3>Notifications</h3>
+        <div class="card">
+            <h4>Notification Settings</h4>
+            <label><input type="checkbox" checked> Email Notifications</label>
+            <label><input type="checkbox" checked> Push Notifications</label>
+            <label><input type="checkbox"> Sound Effects</label>
+            <label><input type="checkbox" checked> Marketing Updates</label>
+        </div>
+    </div>
+
+    <div class="settings-section">
+        <h3>Privacy & Security</h3>
+        <div class="card">
+            <h4>Security Settings</h4>
+            <label><input type="checkbox" checked> Two-Factor Authentication</label>
+            <label><input type="checkbox" checked> Login Alerts</label>
+            <label><input type="checkbox"> Data Collection</label>
+            <label>Account Visibility:
+                <select>
+                    <option selected>Private</option>
+                    <option>Public</option>
+                </select>
+            </label>
+        </div>
+    </div>
+
+    <div class="settings-section">
+        <h3>Connected Accounts</h3>
+        <div class="card">
+            <h4>Connected Accounts</h4>
+            <div class="account">
+                <span>Google</span>
+                <span class="status connected">Connected</span>
+                <button class="btn green">Disconnect</button>
+            </div>
+            <div class="account">
+                <span>Apple</span>
+                <span class="status">Not Connected</span>
+                <button class="btn blue">Connect</button>
+            </div>
+            <div class="account">
+                <span>Microsoft</span>
+                <span class="status connected">Connected</span>
+                <button class="btn green">Disconnect</button>
+            </div>
+            <div class="account">
+                <span>Twitter</span>
+                <span class="status">Not Connected</span>
+                <button class="btn blue">Connect</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

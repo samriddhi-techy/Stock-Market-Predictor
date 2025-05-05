@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Trade Stocks</title>
+  <link rel="stylesheet" href="buy-sell_stock_flow.css"/>
+</head>
+<body>
+  <div class="container">
+    <div class="trade-card">
+      <div class="header">
+        <span class="dot"></span>
+        <h2>Trade Stocks</h2>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active">Buy</button>
+        <button class="tab">Sell</button>
+      </div>
+
+      <div class="form-group">
+        <label for="stock">Select Stock</label>
+        <select id="stock">
+          <option>Choose a stock</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="quantity">Quantity (Shares)</label>
+        <input type="number" id="quantity" value="0" />
+      </div>
+
+      <div class="price-info">
+        <div class="row">
+          <span>Market Price</span>
+          <span>$185.92</span>
+        </div>
+        <div class="row">
+          <span>Estimated Total</span>
+          <span>$0.00</span>
+        </div>
+      </div>
+
+      <button class="review-button">Review Order</button>
+    </div>
+  </div>
+</body>
+</html>

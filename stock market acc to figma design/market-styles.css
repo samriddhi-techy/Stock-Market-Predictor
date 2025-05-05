@@ -1,0 +1,134 @@
+/* Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #0a0a0a;
+    color: #ffffff;
+    padding: 40px 20px;
+  }
+  
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  
+  .gradient-text {
+    background: linear-gradient(to right, #4d90fe, #42f5b3);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .subtitle {
+    text-align: center;
+    color: #aaa;
+    font-size: 1rem;
+    margin-bottom: 30px;
+  }
+  
+  .search-box {
+    width: 100%;
+    margin-bottom: 30px;
+  }
+  
+  .search-box input {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: none;
+    background-color: #1a1a1a;
+    color: #fff;
+    font-size: 1rem;
+  }
+  
+  .search-box input::placeholder {
+    color: #777;
+  }
+  
+  .stock-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .stock-card {
+    background: #1a1a1a;
+    padding: 16px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  
+  .avatar {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(to right, #555, #777);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1rem;
+    color: #fff;
+  }
+  
+  .stock-symbol {
+    font-size: 1rem;
+    font-weight: 700;
+  }
+  
+  .company-name {
+    font-size: 0.85rem;
+    color: #aaa;
+  }
+  
+  .sector {
+    font-size: 0.75rem;
+    color: #777;
+  }
+  
+  .right {
+    text-align: right;
+  }
+  
+  .price {
+    font-size: 1.2rem;
+    font-weight: 700;
+  }
+  
+  .change {
+    font-size: 0.9rem;
+    margin: 4px 0;
+  }
+  
+  .change.up {
+    color: #42f57b;
+  }
+  
+  .change.down {
+    color: #f54242;
+  }
+  
+  .volume {
+    font-size: 0.75rem;
+    color: #777;
+  }
+  

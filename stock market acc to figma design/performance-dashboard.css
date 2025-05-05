@@ -1,0 +1,162 @@
+/* Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    background: #0a0a0a;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #fff;
+    padding: 40px 20px;
+  }
+  
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .tabs {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  
+  .tab {
+    padding: 10px 20px;
+    background: #222;
+    color: #ccc;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: 0.3s;
+  }
+  
+  .tab.active {
+    background: #444;
+    color: #fff;
+  }
+  
+  .cards {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 30px;
+  }
+  
+  .card {
+    background: #1a1a1a;
+    border-radius: 16px;
+    padding: 20px;
+    flex: 1;
+    min-width: 250px;
+  }
+  
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    font-size: 0.95rem;
+    color: #aaa;
+  }
+  
+  .change {
+    font-weight: 600;
+  }
+  
+  .blue {
+    color: #3d7eff;
+  }
+  
+  .purple {
+    color: #a36aff;
+  }
+  
+  .green {
+    color: #42f57b;
+  }
+  
+  .card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .value {
+    font-size: 1.8rem;
+    font-weight: 700;
+  }
+  
+  .progress {
+    height: 4px;
+    border-radius: 2px;
+    position: relative;
+    background: #333;
+  }
+  
+  .progress::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    border-radius: 2px;
+  }
+  
+  .progress.blue::before {
+    width: 70%;
+    background: #3d7eff;
+  }
+  
+  .progress.purple::before {
+    width: 50%;
+    background: #a36aff;
+  }
+  
+  .progress.green::before {
+    width: 80%;
+    background: #42f57b;
+  }
+  
+  .growth-trajectory {
+    background: #1a1a1a;
+    border-radius: 16px;
+    padding: 20px;
+  }
+  
+  .growth-trajectory h3 {
+    margin-bottom: 20px;
+  }
+  
+  .bar-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    height: 200px;
+  }
+  
+  .bar-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    flex: 1;
+  }
+  
+  .bar {
+    width: 100%;
+    background: #3d7eff;
+    border-radius: 4px 4px 0 0;
+    transition: 0.3s;
+  }
+  
+  .bar-group span {
+    margin-top: 8px;
+    font-size: 0.75rem;
+    color: #888;
+    text-align: center;
+  }
+  

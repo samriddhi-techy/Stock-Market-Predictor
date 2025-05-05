@@ -1,0 +1,167 @@
+/* Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    background: #0a0a0a;
+    color: #fff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 40px 20px;
+  }
+  
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .generated {
+    color: #aaa;
+    font-size: 0.9rem;
+    margin-bottom: 16px;
+  }
+  
+  .overview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+  
+  .tabs {
+    display: flex;
+    gap: 12px;
+  }
+  
+  .tab {
+    padding: 8px 16px;
+    background: #222;
+    color: #ccc;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: 0.3s;
+  }
+  
+  .tab.active {
+    background: #0066ff;
+    color: #fff;
+  }
+  
+  .cards {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  
+  .card {
+    background: #1a1a1a;
+    border-radius: 16px;
+    padding: 20px;
+    flex: 1;
+    min-width: 280px;
+    max-width: 350px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  
+  .coin-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .coin-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+  }
+  
+  .btc {
+    background: orange;
+  }
+  
+  .eth {
+    background: #4a68f2;
+  }
+  
+  .sol {
+    background: #72f7c4;
+  }
+  
+  .coin-name {
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+  
+  .coin-fullname {
+    font-size: 0.85rem;
+    color: #aaa;
+  }
+  
+  .coin-price {
+    text-align: right;
+  }
+  
+  .coin-price > div:first-child {
+    font-size: 1.2rem;
+    font-weight: 600;
+  }
+  
+  .change {
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+  
+  .up {
+    color: #42f57b;
+  }
+  
+  .down {
+    color: #f54242;
+  }
+  
+  .chart {
+    height: 120px;
+    border-radius: 12px;
+    background: #111c2a;
+    position: relative;
+  }
+  
+  /* Placeholder lines for chart */
+  .chart-btc::after,
+  .chart-eth::after,
+  .chart-sol::after {
+    content: "";
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    top: 50%;
+    height: 2px;
+    background: currentColor;
+    border-radius: 2px;
+  }
+  
+  .chart-btc::after {
+    background: orange;
+  }
+  
+  .chart-eth::after {
+    background: #4a68f2;
+  }
+  
+  .chart-sol::after {
+    background: #72f7c4;
+  }
+  

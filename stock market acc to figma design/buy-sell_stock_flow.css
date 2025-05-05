@@ -1,0 +1,119 @@
+/* Reset and base styles */
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: 'Arial', sans-serif;
+    background-color: #0a0a0a;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .trade-card {
+    background: radial-gradient(circle at top left, #1c1c2b, #0f0f1a);
+    border-radius: 20px;
+    padding: 30px;
+    width: 350px;
+    box-shadow: 0 0 30px rgba(98, 0, 234, 0.5);
+    color: white;
+  }
+  
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .header .dot {
+    height: 10px;
+    width: 10px;
+    background-color: #6200ea;
+    border-radius: 50%;
+  }
+  
+  .header h2 {
+    font-size: 1.4rem;
+    margin: 0;
+  }
+  
+  .tabs {
+    display: flex;
+    margin-bottom: 20px;
+  }
+  
+  .tab {
+    flex: 1;
+    padding: 10px 0;
+    background: #1e1e2f;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    border-radius: 10px 10px 0 0;
+    transition: background 0.3s;
+  }
+  
+  .tab.active {
+    background-color: #6200ea;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  .form-group label {
+    display: block;
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+    color: #aaa;
+  }
+  
+  select, input[type="number"] {
+    width: 100%;
+    padding: 10px;
+    background: #1e1e2f;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+  }
+  
+  .price-info {
+    background-color: #1e1e2f;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .price-info .row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    color: #ccc;
+  }
+  
+  .review-button {
+    width: 100%;
+    padding: 12px;
+    background-color: #6200ea;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  
+  .review-button:hover {
+    background-color: #7a1aff;
+  }
+  
