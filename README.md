@@ -58,34 +58,4 @@ Stock-Market-Predictor/
 
 ---
 
-🧠 Upcoming Features
-✅ Real-time stock tracking
-
-🔄 Historical data charts
-
-🔮 Stock price prediction using ML
-
-🧾 Personalized Watchlist
-
-🤖 AI chatbot for insights and tips
-
-📈 Sentiment analysis based on news feeds
-
-
-
-
-✨ Live Preview
-Coming soon! Will be deployed on Vercel / Netlify.
-
-
-
-🙋‍♀️ Author
-Made with 💻 by Samriddhi Shah
-🔗 GitHub | LinkedIn
-
-
-
-📃 License
-This project is licensed under the MIT License.
-
 
