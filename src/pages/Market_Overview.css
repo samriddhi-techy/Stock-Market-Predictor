@@ -1,0 +1,108 @@
+.market-overview {
+    font-family: 'Arial', sans-serif;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    color: #333;
+  }
+  
+  .market-header {
+    margin-bottom: 25px;
+  }
+  
+  .market-header h1 {
+    font-size: 2rem;
+    color: #222;
+    margin-bottom: 10px;
+  }
+  
+  .subtitle {
+    color: #666;
+    font-size: 1.1rem;
+    margin: 0;
+  }
+  
+  .search-container {
+    margin-bottom: 25px;
+  }
+  
+  .search-input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+  }
+  
+  .search-input:focus {
+    outline: none;
+    border-color: #0066cc;
+  }
+  
+  .stocks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .stock-card {
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 20px;
+  }
+  
+  .stock-header {
+    margin-bottom: 15px;
+  }
+  
+  .stock-symbol {
+    font-size: 1.5rem;
+    margin: 0 0 5px 0;
+    color: #222;
+  }
+  
+  .stock-name {
+    font-size: 1rem;
+    color: #666;
+  }
+  
+  .stock-price {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  
+  .stock-change {
+    font-weight: bold;
+    margin-bottom: 15px;
+  }
+  
+  .stock-change.positive {
+    color: #28a745;
+  }
+  
+  .stock-change.negative {
+    color: #dc3545;
+  }
+  
+  .stock-details {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    color: #666;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 600px) {
+    .market-overview {
+      padding: 15px;
+    }
+    
+    .market-header h1 {
+      font-size: 1.8rem;
+    }
+    
+    .stock-price {
+      font-size: 1.5rem;
+    }
+  }

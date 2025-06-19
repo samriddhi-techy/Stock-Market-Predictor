@@ -1,0 +1,89 @@
+.watchlist {
+    font-family: 'Arial', sans-serif;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+    color: #333;
+  }
+  
+  .watchlist h1 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    color: #222;
+  }
+  
+  .table-container {
+    overflow-x: auto;
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 15px;
+  }
+  
+  th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+  }
+  
+  th:hover {
+    background-color: #f1f1f1;
+  }
+  
+  .market-cap-row td {
+    font-size: 0.85rem;
+    color: #666;
+    padding: 8px 15px;
+    background-color: #fafafa;
+  }
+  
+  .prediction {
+    font-weight: bold;
+  }
+  
+  .prediction.bullish {
+    color: #28a745;
+  }
+  
+  .prediction.neutral {
+    color: #ffc107;
+  }
+  
+  .prediction.bearish {
+    color: #dc3545;
+  }
+  
+  .sort-note {
+    font-size: 0.9rem;
+    color: #666;
+    text-align: right;
+    font-style: italic;
+  }
+  
+  .loading {
+    text-align: center;
+    padding: 50px;
+    font-size: 1.2rem;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    th, td {
+      padding: 8px 10px;
+      font-size: 0.9rem;
+    }
+    
+    .watchlist h1 {
+      font-size: 1.8rem;
+    }
+  }

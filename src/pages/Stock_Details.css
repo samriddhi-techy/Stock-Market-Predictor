@@ -1,0 +1,108 @@
+.stock-detail {
+    font-family: 'Arial', sans-serif;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    color: #333;
+  }
+  
+  .stock-header {
+    margin-bottom: 25px;
+  }
+  
+  .stock-header h1 {
+    font-size: 2rem;
+    color: #222;
+    margin-bottom: 10px;
+  }
+  
+  .stock-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    color: #666;
+    font-size: 0.9rem;
+  }
+  
+  .stock-price-section {
+    margin-bottom: 30px;
+  }
+  
+  .current-price {
+    font-size: 3rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  
+  .price-change {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  
+  .price-change.positive {
+    color: #28a745;
+  }
+  
+  .price-change.negative {
+    color: #dc3545;
+  }
+  
+  .previous-close {
+    color: #666;
+    font-size: 0.9rem;
+  }
+  
+  .stock-chart {
+    height: 300px;
+    margin-bottom: 20px;
+    position: relative;
+  }
+  
+  .time-range-selector {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 30px;
+  }
+  
+  .time-range-selector button {
+    padding: 8px 15px;
+    border: 1px solid #ddd;
+    background: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  
+  .time-range-selector button.active {
+    background-color: #0066cc;
+    color: white;
+    border-color: #0066cc;
+  }
+  
+  .loading, .error {
+    text-align: center;
+    padding: 50px;
+    font-size: 1.2rem;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 600px) {
+    .stock-detail {
+      padding: 15px;
+    }
+    
+    .stock-header h1 {
+      font-size: 1.8rem;
+    }
+    
+    .current-price {
+      font-size: 2.5rem;
+    }
+    
+    .stock-meta {
+      flex-direction: column;
+      gap: 5px;
+    }
+  }

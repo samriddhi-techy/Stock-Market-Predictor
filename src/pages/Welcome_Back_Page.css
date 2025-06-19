@@ -1,0 +1,116 @@
+.dashboard {
+    font-family: 'Arial', sans-serif;
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    color: #333;
+  }
+  
+  .dashboard-header {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  
+  .dashboard-header h1 {
+    font-size: 2rem;
+    color: #222;
+    margin-bottom: 10px;
+  }
+  
+  .greeting {
+    color: #666;
+    font-size: 1.1rem;
+    margin: 0;
+  }
+  
+  .balance-card {
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 20px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+  
+  .balance-header {
+    font-size: 0.95rem;
+    color: #666;
+    margin-bottom: 10px;
+  }
+  
+  .balance-amount {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #222;
+    margin-bottom: 10px;
+  }
+  
+  .performance-indicator {
+    font-size: 1.1rem;
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 20px;
+    display: inline-block;
+  }
+  
+  .performance-indicator.positive {
+    background-color: #e6f7ee;
+    color: #28a745;
+  }
+  
+  .change-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 30px;
+  }
+  
+  .change-label {
+    font-size: 0.95rem;
+    color: #666;
+  }
+  
+  .change-amount {
+    font-size: 1.2rem;
+    font-weight: bold;
+  }
+  
+  .change-amount.positive {
+    color: #28a745;
+  }
+  
+  .details-button {
+    width: 100%;
+    background-color: #0066cc;
+    color: white;
+    border: none;
+    padding: 14px;
+    font-size: 1rem;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .details-button:hover {
+    background-color: #0052a3;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 480px) {
+    .dashboard {
+      padding: 30px 15px;
+    }
+    
+    .dashboard-header h1 {
+      font-size: 1.8rem;
+    }
+    
+    .balance-amount {
+      font-size: 2rem;
+    }
+  }
+  
