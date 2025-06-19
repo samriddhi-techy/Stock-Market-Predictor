@@ -71,17 +71,21 @@ Stock-Market-Predictor/
 
 📈 Sentiment analysis based on news feeds
 
+
+
+
 ✨ Live Preview
 Coming soon! Will be deployed on Vercel / Netlify.
+
+
 
 🙋‍♀️ Author
 Made with 💻 by Samriddhi Shah
 🔗 GitHub | LinkedIn
 
+
+
 📃 License
 This project is licensed under the MIT License.
 
----
-
-✅ You can now paste this directly into your `README.md` file. Let me know if you want help customizing a **live demo badge**, **deployment instructions**, or adding screenshots.
 
