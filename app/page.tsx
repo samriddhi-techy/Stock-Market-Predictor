@@ -1,489 +1,287 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useState, useCallback, useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import { TrendingUp, TrendingDown, Search, Bell, Plus, Target, BarChart3, AlertTriangle, DollarSign, Activity } from 'lucide-react';
-
-// Mock stock data
-const MOCK_STOCKS = [
-  {
-    symbol: 'AAPL',
-    name: 'Apple Inc.',
-    price: 175.43,
-    change: 2.31,
-    changePercent: 1.33,
-    volume: '64.2M',
-    marketCap: '2.78T',
-    prediction: 182.15,
-    confidence: 0.78
-  },
-  {
-    symbol: 'GOOGL',
-    name: 'Alphabet Inc.',
-    price: 138.21,
-    change: -1.87,
-    changePercent: -1.34,
-    volume: '29.8M',
-    marketCap: '1.75T',
-    prediction: 145.30,
-    confidence: 0.65
-  },
-  {
-    symbol: 'MSFT',
-    name: 'Microsoft Corporation',
-    price: 378.85,
-    change: 4.23,
-    changePercent: 1.13,
-    volume: '22.1M',
-    marketCap: '2.81T',
-    prediction: 395.20,
-    confidence: 0.82
-  },
-  {
-    symbol: 'TSLA',
-    name: 'Tesla Inc.',
-    price: 248.42,
-    change: -8.91,
-    changePercent: -3.46,
-    volume: '89.7M',
-    marketCap: '790B',
-    prediction: 267.80,
-    confidence: 0.59
-  },
-  {
-    symbol: 'AMZN',
-    name: 'Amazon.com Inc.',
-    price: 151.94,
-    change: 1.76,
-    changePercent: 1.17,
-    volume: '41.3M',
-    marketCap: '1.58T',
-    prediction: 165.45,
-    confidence: 0.71
-  }
-];
-
-// Generate mock historical data
-const generateHistoricalData = (basePrice: number, days: number = 30) => {
-  const data = [];
-  let price = basePrice;
-  const today = new Date();
-  
-  for (let i = days; i >= 0; i--) {
-    const date = new Date(today);
-    date.setDate(date.getDate() - i);
-    
-    // Add some realistic price movement
-    const change = (Math.random() - 0.5) * 0.1 * price;
-    price += change;
-    
-    data.push({
-      date: date.toISOString().split('T')[0],
-      price: parseFloat(price.toFixed(2)),
-      volume: Math.floor(Math.random() * 50000000) + 10000000,
-      prediction: i < 7 ? parseFloat((price * (1 + (Math.random() - 0.3) * 0.1)).toFixed(2)) : null
-    });
-  }
-  
-  return data;
-};
-
-interface WatchlistItem {
-  symbol: string;
-  targetPrice?: number;
-  alertEnabled: boolean;
-}
-
-interface Alert {
-  id: string;
-  symbol: string;
-  message: string;
-  type: 'price' | 'change' | 'volume';
-  timestamp: Date;
-}
+import { Activity, Bell, BarChart3, DollarSign, TrendingUp, Target, History as HistoryIcon } from 'lucide-react';
+import { MOCK_STOCKS, MockStock } from '@/lib/constants';
+import { useWatchlist } from '@/hooks/use-watchlist';
+import { useFavorites } from '@/hooks/use-favorites';
+import { useRecentSearches } from '@/hooks/use-recent-searches';
+import { usePredictionHistory } from '@/hooks/use-prediction-history';
+import { StockListItem } from '@/components/stock/stock-list-item';
+import { StockSearch } from '@/components/stock/stock-search';
+import { RecentSearches } from '@/components/stock/recent-searches';
+import { PredictionCard } from '@/components/stock/prediction-card';
+import { AIExplanationPanel } from '@/components/stock/ai-explanation-panel';
+import { PriceChart } from '@/components/stock/price-chart';
+import { StockMetricCard } from '@/components/stock/stock-metric-card';
+import { DisclaimerBanner } from '@/components/ui/disclaimer-banner';
+import { PredictionHistoryTable } from '@/components/prediction/prediction-history-table';
+import { formatCurrency, formatChange, formatPercent, getTrendDirection } from '@/lib/utils/format';
+import { cn } from '@/lib/utils';
 
 export default function StockMarketApp() {
-  const [selectedStock, setSelectedStock] = useState(MOCK_STOCKS[0]);
+  const [selectedStock, setSelectedStock] = useState<MockStock>(MOCK_STOCKS[0]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
-  const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [historicalData, setHistoricalData] = useState(generateHistoricalData(selectedStock.price));
-  const [timeframe, setTimeframe] = useState('30D');
 
-  useEffect(() => {
-    setHistoricalData(generateHistoricalData(selectedStock.price));
-  }, [selectedStock]);
+  const { isInWatchlist, addToWatchlist, removeFromWatchlist } = useWatchlist();
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const { recentSearches, addRecentSearch, removeRecentSearch, clearRecentSearches } = useRecentSearches();
+  const { history, addPrediction, clearHistory } = usePredictionHistory();
 
-  useEffect(() => {
-    // Load watchlist from localStorage
-    const savedWatchlist = localStorage.getItem('stock-watchlist');
-    if (savedWatchlist) {
-      setWatchlist(JSON.parse(savedWatchlist));
-    }
-
-    // Simulate real-time alerts
-    const alertInterval = setInterval(() => {
-      const randomStock = MOCK_STOCKS[Math.floor(Math.random() * MOCK_STOCKS.length)];
-      if (Math.random() > 0.8) {
-        const newAlert: Alert = {
-          id: Date.now().toString(),
-          symbol: randomStock.symbol,
-          message: `${randomStock.symbol} moved ${Math.abs(randomStock.change).toFixed(2)} (${Math.abs(randomStock.changePercent).toFixed(2)}%)`,
-          type: 'change',
-          timestamp: new Date()
-        };
-        setAlerts(prev => [newAlert, ...prev.slice(0, 4)]);
-      }
-    }, 15000);
-
-    return () => clearInterval(alertInterval);
-  }, []);
-
-  const addToWatchlist = (symbol: string) => {
-    const newItem: WatchlistItem = {
-      symbol,
-      alertEnabled: true
-    };
-    const updatedWatchlist = [...watchlist, newItem];
-    setWatchlist(updatedWatchlist);
-    localStorage.setItem('stock-watchlist', JSON.stringify(updatedWatchlist));
-  };
-
-  const removeFromWatchlist = (symbol: string) => {
-    const updatedWatchlist = watchlist.filter(item => item.symbol !== symbol);
-    setWatchlist(updatedWatchlist);
-    localStorage.setItem('stock-watchlist', JSON.stringify(updatedWatchlist));
-  };
-
-  const filteredStocks = MOCK_STOCKS.filter(stock =>
-    stock.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    stock.name.toLowerCase().includes(searchQuery.toLowerCase())
+  // Filtered stocks list based on search query (actual query, not debounced — the StockSearch handles debounce internally)
+  const filteredStocks = useMemo(
+    () =>
+      MOCK_STOCKS.filter(
+        (s) =>
+          s.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          s.name.toLowerCase().includes(searchQuery.toLowerCase())
+      ),
+    [searchQuery]
   );
 
-  const isInWatchlist = (symbol: string) => watchlist.some(item => item.symbol === symbol);
+  const handleStockSelect = useCallback(
+    (stock: MockStock) => {
+      setSelectedStock(stock);
+      setSearchQuery('');
+      addRecentSearch(stock.symbol);
+    },
+    [addRecentSearch]
+  );
+
+  const handleSearchSelect = useCallback(
+    (symbol: string) => {
+      const stock = MOCK_STOCKS.find((s) => s.symbol === symbol);
+      if (stock) {
+        handleStockSelect(stock);
+      }
+    },
+    [handleStockSelect]
+  );
+
+  const handleWatchlistToggle = useCallback(
+    (stock: MockStock) => {
+      if (isInWatchlist(stock.symbol)) {
+        removeFromWatchlist(stock.symbol);
+      } else {
+        addToWatchlist({ symbol: stock.symbol, name: stock.name, currentPrice: stock.price });
+      }
+    },
+    [isInWatchlist, addToWatchlist, removeFromWatchlist]
+  );
+
+  const handleSavePrediction = useCallback(() => {
+    const predChangePercent = ((selectedStock.prediction - selectedStock.price) / selectedStock.price) * 100;
+    addPrediction({
+      symbol: selectedStock.symbol,
+      name: selectedStock.name,
+      predictedPrice: selectedStock.prediction,
+      confidence: selectedStock.confidence,
+      trend: getTrendDirection(predChangePercent),
+      timestamp: new Date().toISOString(),
+    });
+  }, [selectedStock, addPrediction]);
+
+  const isGaining = selectedStock.change >= 0;
 
   return (
-    <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-2">
-                Stock Market Intelligence
-              </h1>
-              <p className="text-slate-600 dark:text-slate-300">
-                Advanced analytics and AI-powered predictions for informed trading decisions
-              </p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Badge variant="outline" className="px-3 py-1">
-                <Activity className="w-4 h-4 mr-2" />
-                Live Data
-              </Badge>
-              {alerts.length > 0 && (
-                <Badge variant="destructive" className="px-3 py-1">
-                  <Bell className="w-4 h-4 mr-2" />
-                  {alerts.length} Alert{alerts.length !== 1 ? 's' : ''}
-                </Badge>
-              )}
-            </div>
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
+      {/* Header */}
+      <header className="mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+              Stock Market Intelligence
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">
+              Advanced analytics and AI-powered predictions for informed decisions
+            </p>
           </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Badge variant="outline" className="gap-1.5 px-3 py-1 text-xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" aria-hidden="true" />
+              <Activity className="w-3.5 h-3.5" aria-hidden="true" />
+              Live Data
+            </Badge>
+          </div>
+        </div>
 
-          {/* Search Bar */}
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-            <Input
-              placeholder="Search stocks by symbol or company name..."
-              className="pl-10"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+        {/* Search */}
+        <div className="space-y-3">
+          <StockSearch
+            value={searchQuery}
+            onChange={setSearchQuery}
+            onSelect={handleSearchSelect}
+            recentSearches={recentSearches}
+            className="max-w-lg"
+          />
+          <RecentSearches
+            searches={recentSearches}
+            onSelect={handleSearchSelect}
+            onRemove={removeRecentSearch}
+            onClear={clearRecentSearches}
+            className="max-w-lg"
+          />
+        </div>
+      </header>
+
+      {/* Main layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* ── Left: Stock List ─────────────────────────────── */}
+        <aside className="lg:col-span-1" aria-label="Stock list">
+          <Card className="sticky top-20">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-blue-500" aria-hidden="true" />
+                Market Overview
+              </CardTitle>
+              <CardDescription className="text-xs">
+                AI predictions updated every 15 min
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2 px-4 pb-4" role="listbox" aria-label="Select a stock">
+              {filteredStocks.length === 0 ? (
+                <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-8">
+                  No stocks match &ldquo;{searchQuery}&rdquo;
+                </p>
+              ) : (
+                filteredStocks.map((stock) => (
+                  <StockListItem
+                    key={stock.symbol}
+                    stock={stock}
+                    isSelected={selectedStock.symbol === stock.symbol}
+                    isInWatchlist={isInWatchlist(stock.symbol)}
+                    isFavorite={isFavorite(stock.symbol)}
+                    onClick={handleStockSelect}
+                    onWatchlistToggle={handleWatchlistToggle}
+                    onFavoriteToggle={toggleFavorite}
+                  />
+                ))
+              )}
+            </CardContent>
+          </Card>
+        </aside>
+
+        {/* ── Right: Detail Panel ──────────────────────────── */}
+        <main className="lg:col-span-2 space-y-5" aria-label="Stock detail">
+          {/* Stock header */}
+          <Card>
+            <CardContent className="px-5 py-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+                      {selectedStock.symbol}
+                    </h2>
+                    <Badge
+                      variant={isGaining ? 'default' : 'destructive'}
+                      className={cn(
+                        'text-xs',
+                        isGaining
+                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                          : ''
+                      )}
+                    >
+                      {formatPercent(selectedStock.changePercent)}
+                    </Badge>
+                    {selectedStock.sector && (
+                      <span className="text-xs text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full">
+                        {selectedStock.sector}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
+                    {selectedStock.name}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <div className="text-3xl font-bold text-slate-900 dark:text-white">
+                    {formatCurrency(selectedStock.price)}
+                  </div>
+                  <div className={cn(
+                    'text-sm font-medium',
+                    isGaining ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
+                  )}>
+                    {formatChange(selectedStock.change)} today
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Metrics row */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <StockMetricCard
+              icon={DollarSign}
+              label="Market Cap"
+              value={selectedStock.marketCap}
+              iconClass="text-blue-600"
+              iconBg="bg-blue-50 dark:bg-blue-950"
+            />
+            <StockMetricCard
+              icon={Activity}
+              label="Volume"
+              value={selectedStock.volume}
+              iconClass="text-emerald-600"
+              iconBg="bg-emerald-50 dark:bg-emerald-950"
+            />
+            <StockMetricCard
+              icon={TrendingUp}
+              label="AI Prediction"
+              value={formatCurrency(selectedStock.prediction)}
+              subValue="7-day target"
+              iconClass="text-purple-600"
+              iconBg="bg-purple-50 dark:bg-purple-950"
+            />
+            <StockMetricCard
+              icon={Target}
+              label="Confidence"
+              value={`${Math.round(selectedStock.confidence * 100)}%`}
+              subValue={selectedStock.confidence >= 0.75 ? 'High' : selectedStock.confidence >= 0.5 ? 'Medium' : 'Low'}
+              iconClass="text-amber-600"
+              iconBg="bg-amber-50 dark:bg-amber-950"
             />
           </div>
-        </div>
 
-        {/* Alerts Section */}
-        {alerts.length > 0 && (
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-3 flex items-center">
-              <AlertTriangle className="w-5 h-5 mr-2 text-amber-500" />
-              Recent Alerts
-            </h3>
-            <div className="grid gap-2">
-              {alerts.slice(0, 3).map((alert) => (
-                <Alert key={alert.id} className="border-l-4 border-l-amber-400">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertTitle>{alert.symbol}</AlertTitle>
-                  <AlertDescription>
-                    {alert.message} • {alert.timestamp.toLocaleTimeString()}
-                  </AlertDescription>
-                </Alert>
-              ))}
-            </div>
+          {/* Chart */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Price History & Prediction</CardTitle>
+            </CardHeader>
+            <CardContent className="px-4 pb-4">
+              <PriceChart basePrice={selectedStock.price} symbol={selectedStock.symbol} />
+            </CardContent>
+          </Card>
+
+          {/* Prediction card + AI Explanation */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+            <PredictionCard
+              stock={selectedStock}
+              onSavePrediction={handleSavePrediction}
+            />
+            <AIExplanationPanel stock={selectedStock} />
           </div>
-        )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Stock List */}
-          <div className="lg:col-span-1">
+          {/* Prediction History */}
+          {history.length > 0 && (
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <BarChart3 className="w-5 h-5 mr-2" />
-                  Market Overview
-                </CardTitle>
-                <CardDescription>
-                  Top performing stocks with AI predictions
-                </CardDescription>
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-2">
+                  <HistoryIcon className="w-4 h-4 text-slate-400" aria-hidden="true" />
+                  <CardTitle className="text-base">Prediction History</CardTitle>
+                </div>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {filteredStocks.map((stock) => (
-                  <div
-                    key={stock.symbol}
-                    className={`p-4 rounded-lg border cursor-pointer transition-all hover:shadow-md ${
-                      selectedStock.symbol === stock.symbol
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-950'
-                        : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
-                    }`}
-                    onClick={() => setSelectedStock(stock)}
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <h3 className="font-bold text-lg">{stock.symbol}</h3>
-                        <p className="text-sm text-slate-600 dark:text-slate-400 truncate">
-                          {stock.name}
-                        </p>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant={isInWatchlist(stock.symbol) ? "destructive" : "outline"}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (isInWatchlist(stock.symbol)) {
-                            removeFromWatchlist(stock.symbol);
-                          } else {
-                            addToWatchlist(stock.symbol);
-                          }
-                        }}
-                      >
-                        {isInWatchlist(stock.symbol) ? (
-                          <Target className="w-4 h-4" />
-                        ) : (
-                          <Plus className="w-4 h-4" />
-                        )}
-                      </Button>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-2xl font-bold">
-                          ${stock.price.toFixed(2)}
-                        </span>
-                        <div className={`flex items-center text-sm ${
-                          stock.change >= 0 ? 'text-emerald-600' : 'text-red-600'
-                        }`}>
-                          {stock.change >= 0 ? (
-                            <TrendingUp className="w-4 h-4 mr-1" />
-                          ) : (
-                            <TrendingDown className="w-4 h-4 mr-1" />
-                          )}
-                          {stock.change >= 0 ? '+' : ''}{stock.change.toFixed(2)} ({stock.changePercent.toFixed(2)}%)
-                        </div>
-                      </div>
-                      
-                      <div className="text-right text-sm">
-                        <div className="text-slate-600 dark:text-slate-400">
-                          Prediction
-                        </div>
-                        <div className="font-semibold text-blue-600">
-                          ${stock.prediction.toFixed(2)}
-                        </div>
-                        <div className="text-xs text-slate-500">
-                          {(stock.confidence * 100).toFixed(0)}% confidence
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              <CardContent className="px-4 pb-4">
+                <PredictionHistoryTable history={history} onClear={clearHistory} />
               </CardContent>
             </Card>
-          </div>
+          )}
 
-          {/* Right Column - Selected Stock Details */}
-          <div className="lg:col-span-2">
-            <Card className="mb-6">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-2xl flex items-center">
-                      {selectedStock.symbol}
-                      <Badge className="ml-3" variant={selectedStock.change >= 0 ? "default" : "destructive"}>
-                        {selectedStock.change >= 0 ? '+' : ''}{selectedStock.changePercent.toFixed(2)}%
-                      </Badge>
-                    </CardTitle>
-                    <CardDescription className="text-lg">
-                      {selectedStock.name}
-                    </CardDescription>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-3xl font-bold">
-                      ${selectedStock.price.toFixed(2)}
-                    </div>
-                    <div className={`text-lg ${
-                      selectedStock.change >= 0 ? 'text-emerald-600' : 'text-red-600'
-                    }`}>
-                      {selectedStock.change >= 0 ? '+' : ''}{selectedStock.change.toFixed(2)}
-                    </div>
-                  </div>
-                </div>
-              </CardHeader>
-            </Card>
-
-            {/* Key Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center">
-                    <DollarSign className="w-5 h-5 text-blue-500 mr-2" />
-                    <div>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">Market Cap</p>
-                      <p className="text-lg font-semibold">{selectedStock.marketCap}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center">
-                    <Activity className="w-5 h-5 text-green-500 mr-2" />
-                    <div>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">Volume</p>
-                      <p className="text-lg font-semibold">{selectedStock.volume}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center">
-                    <TrendingUp className="w-5 h-5 text-purple-500 mr-2" />
-                    <div>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">AI Prediction</p>
-                      <p className="text-lg font-semibold text-blue-600">
-                        ${selectedStock.prediction.toFixed(2)}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center">
-                    <Target className="w-5 h-5 text-amber-500 mr-2" />
-                    <div>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">Confidence</p>
-                      <p className="text-lg font-semibold">
-                        {(selectedStock.confidence * 100).toFixed(0)}%
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Chart Section */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Price Chart & Predictions</CardTitle>
-                  <Tabs value={timeframe} onValueChange={setTimeframe}>
-                    <TabsList>
-                      <TabsTrigger value="7D">7D</TabsTrigger>
-                      <TabsTrigger value="30D">30D</TabsTrigger>
-                      <TabsTrigger value="90D">90D</TabsTrigger>
-                      <TabsTrigger value="1Y">1Y</TabsTrigger>
-                    </TabsList>
-                  </Tabs>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="h-96">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={historicalData}>
-                      <defs>
-                        <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
-                        </linearGradient>
-                        <linearGradient id="colorPrediction" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor="#10b981" stopOpacity={0.1}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                      <XAxis 
-                        dataKey="date" 
-                        stroke="#64748b"
-                        fontSize={12}
-                        tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                      />
-                      <YAxis 
-                        stroke="#64748b"
-                        fontSize={12}
-                        tickFormatter={(value) => `$${value.toFixed(0)}`}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: '#ffffff',
-                          border: '1px solid #e2e8f0',
-                          borderRadius: '8px',
-                          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-                        }}
-                        formatter={(value: any, name: string) => [
-                          `$${parseFloat(value).toFixed(2)}`,
-                          name === 'price' ? 'Actual Price' : 'AI Prediction'
-                        ]}
-                        labelFormatter={(label) => new Date(label).toLocaleDateString('en-US', { 
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
-                      />
-                      <Legend />
-                      <Area
-                        type="monotone"
-                        dataKey="price"
-                        stroke="#3b82f6"
-                        strokeWidth={2}
-                        fillOpacity={1}
-                        fill="url(#colorPrice)"
-                        name="Actual Price"
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="prediction"
-                        stroke="#10b981"
-                        strokeWidth={2}
-                        strokeDasharray="5 5"
-                        dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
-                        name="AI Prediction"
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+          {/* Financial disclaimer */}
+          <DisclaimerBanner />
+        </main>
+      </div>
     </div>
   );
 }

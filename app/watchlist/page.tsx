@@ -1,125 +1,109 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { TrendingUp, TrendingDown, Star, Plus, Target, Bell, Trash2, Edit, AlertTriangle } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  Star, Plus, TrendingUp, TrendingDown, Bell, Trash2, Edit, Target, Activity, AlertTriangle
+} from 'lucide-react';
+import { useWatchlist } from '@/hooks/use-watchlist';
+import { MOCK_STOCKS } from '@/lib/constants';
+import { WatchlistItem } from '@/lib/types';
+import { EmptyState } from '@/components/ui/empty-state';
+import { StockMetricCard } from '@/components/stock/stock-metric-card';
+import { formatCurrency, formatChange, formatPercent, formatDate } from '@/lib/utils/format';
+import { cn } from '@/lib/utils';
 
-// Mock stock data
-const AVAILABLE_STOCKS = [
-  { symbol: 'AAPL', name: 'Apple Inc.', price: 175.43, change: 2.31, changePercent: 1.33 },
-  { symbol: 'GOOGL', name: 'Alphabet Inc.', price: 138.21, change: -1.87, changePercent: -1.34 },
-  { symbol: 'MSFT', name: 'Microsoft Corporation', price: 378.85, change: 4.23, changePercent: 1.13 },
-  { symbol: 'TSLA', name: 'Tesla Inc.', price: 248.42, change: -8.91, changePercent: -3.46 },
-  { symbol: 'AMZN', name: 'Amazon.com Inc.', price: 151.94, change: 1.76, changePercent: 1.17 },
-  { symbol: 'NVDA', name: 'NVIDIA Corporation', price: 456.78, change: 12.34, changePercent: 2.78 },
-  { symbol: 'META', name: 'Meta Platforms Inc.', price: 298.65, change: -5.43, changePercent: -1.79 },
-];
-
-interface WatchlistItem {
-  id: string;
-  symbol: string;
-  name: string;
-  currentPrice: number;
-  targetPrice?: number;
-  alertsEnabled: boolean;
-  priceAlert: boolean;
-  changeAlert: boolean;
-  addedDate: Date;
-}
+const STOCK_MAP = Object.fromEntries(MOCK_STOCKS.map((s) => [s.symbol, s]));
 
 export default function WatchlistPage() {
-  const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
+  const { watchlist, isInWatchlist, addToWatchlist, removeFromWatchlist, updateWatchlistItem, stats } = useWatchlist();
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<WatchlistItem | null>(null);
   const [newTargetPrice, setNewTargetPrice] = useState('');
+  const [targetPriceError, setTargetPriceError] = useState('');
 
-  useEffect(() => {
-    // Load watchlist from localStorage
-    const savedWatchlist = localStorage.getItem('stock-watchlist-detailed');
-    if (savedWatchlist) {
-      const parsed = JSON.parse(savedWatchlist);
-      setWatchlist(parsed.map((item: any) => ({
-        ...item,
-        addedDate: new Date(item.addedDate)
-      })));
-    }
-  }, []);
-
-  const saveWatchlist = (newWatchlist: WatchlistItem[]) => {
-    setWatchlist(newWatchlist);
-    localStorage.setItem('stock-watchlist-detailed', JSON.stringify(newWatchlist));
-  };
-
-  const addToWatchlist = (stock: typeof AVAILABLE_STOCKS[0]) => {
-    const newItem: WatchlistItem = {
-      id: Date.now().toString(),
-      symbol: stock.symbol,
-      name: stock.name,
-      currentPrice: stock.price,
-      alertsEnabled: true,
-      priceAlert: false,
-      changeAlert: true,
-      addedDate: new Date()
-    };
-    saveWatchlist([...watchlist, newItem]);
-    setIsAddDialogOpen(false);
-  };
-
-  const removeFromWatchlist = (id: string) => {
-    saveWatchlist(watchlist.filter(item => item.id !== id));
-  };
-
-  const updateWatchlistItem = (id: string, updates: Partial<WatchlistItem>) => {
-    saveWatchlist(watchlist.map(item => 
-      item.id === id ? { ...item, ...updates } : item
-    ));
-    setEditingItem(null);
-    setNewTargetPrice('');
-  };
-
-  const filteredStocks = AVAILABLE_STOCKS.filter(stock =>
-    !watchlist.some(item => item.symbol === stock.symbol) &&
-    (stock.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
-     stock.name.toLowerCase().includes(searchQuery.toLowerCase()))
+  // Stats derived from watchlist
+  const gainers = useMemo(
+    () => watchlist.filter((item) => (STOCK_MAP[item.symbol]?.change ?? 0) > 0).length,
+    [watchlist]
+  );
+  const losers = useMemo(
+    () => watchlist.filter((item) => (STOCK_MAP[item.symbol]?.change ?? 0) < 0).length,
+    [watchlist]
   );
 
-  const getAlertStatus = (item: WatchlistItem) => {
-    const alerts = [];
-    if (item.targetPrice && item.currentPrice >= item.targetPrice) {
-      alerts.push('Target reached');
+  // Stocks not yet in watchlist
+  const availableStocks = useMemo(
+    () =>
+      MOCK_STOCKS.filter(
+        (s) =>
+          !isInWatchlist(s.symbol) &&
+          (s.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            s.name.toLowerCase().includes(searchQuery.toLowerCase()))
+      ),
+    [isInWatchlist, searchQuery]
+  );
+
+  const handleSaveEdit = () => {
+    if (!editingItem) return;
+
+    if (newTargetPrice) {
+      const val = parseFloat(newTargetPrice);
+      if (isNaN(val) || val <= 0) {
+        setTargetPriceError('Please enter a valid positive price.');
+        return;
+      }
+      if (val < 0.01 || val > 999999) {
+        setTargetPriceError('Price must be between $0.01 and $999,999.');
+        return;
+      }
     }
-    if (Math.abs((AVAILABLE_STOCKS.find(s => s.symbol === item.symbol)?.changePercent || 0)) > 5) {
-      alerts.push('High volatility');
+
+    updateWatchlistItem(editingItem.id, {
+      targetPrice: newTargetPrice ? parseFloat(newTargetPrice) : undefined,
+      alertsEnabled: editingItem.alertsEnabled,
+    });
+    setEditingItem(null);
+    setNewTargetPrice('');
+    setTargetPriceError('');
+  };
+
+  const handleAddStock = (symbol: string) => {
+    const stock = STOCK_MAP[symbol];
+    if (stock) {
+      addToWatchlist({ symbol: stock.symbol, name: stock.name, currentPrice: stock.price });
     }
-    return alerts;
+    setIsAddDialogOpen(false);
+    setSearchQuery('');
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 max-w-5xl">
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
+      <header className="mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-2 flex items-center">
-              <Star className="w-8 h-8 mr-3 text-yellow-500" />
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
+              <div className="p-2 bg-yellow-50 dark:bg-yellow-950 rounded-xl">
+                <Star className="w-6 h-6 text-yellow-500" aria-hidden="true" />
+              </div>
               My Watchlist
             </h1>
-            <p className="text-slate-600 dark:text-slate-300">
+            <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">
               Track your favorite stocks and set price alerts
             </p>
           </div>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <Dialog open={isAddDialogOpen} onOpenChange={(open) => { setIsAddDialogOpen(open); if (!open) setSearchQuery(''); }}>
             <DialogTrigger asChild>
-              <Button className="flex items-center">
-                <Plus className="w-4 h-4 mr-2" />
+              <Button className="gap-2 flex-shrink-0" aria-label="Add stock to watchlist">
+                <Plus className="w-4 h-4" aria-hidden="true" />
                 Add Stock
               </Button>
             </DialogTrigger>
@@ -127,43 +111,51 @@ export default function WatchlistPage() {
               <DialogHeader>
                 <DialogTitle>Add Stock to Watchlist</DialogTitle>
                 <DialogDescription>
-                  Search and select a stock to add to your watchlist
+                  Search and select a stock to track
                 </DialogDescription>
               </DialogHeader>
-              <div className="space-y-4">
-                <Input
-                  placeholder="Search stocks..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                <div className="max-h-60 overflow-y-auto space-y-2">
-                  {filteredStocks.map((stock) => (
-                    <div
-                      key={stock.symbol}
-                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800"
-                    >
-                      <div>
-                        <div className="font-semibold">{stock.symbol}</div>
-                        <div className="text-sm text-slate-600 dark:text-slate-400">
-                          {stock.name}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-semibold">${stock.price.toFixed(2)}</div>
-                        <div className={`text-sm ${
-                          stock.change >= 0 ? 'text-emerald-600' : 'text-red-600'
-                        }`}>
-                          {stock.change >= 0 ? '+' : ''}{stock.changePercent.toFixed(2)}%
-                        </div>
-                      </div>
-                      <Button
-                        size="sm"
-                        onClick={() => addToWatchlist(stock)}
+              <div className="space-y-4 pt-2">
+                <div className="relative">
+                  <Input
+                    placeholder="Search by symbol or company..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    aria-label="Search stocks to add"
+                    autoFocus
+                  />
+                </div>
+                <div className="max-h-64 overflow-y-auto space-y-1.5 pr-1" role="list">
+                  {availableStocks.length === 0 ? (
+                    <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-6">
+                      {searchQuery ? `No results for "${searchQuery}"` : 'All stocks are already in your watchlist'}
+                    </p>
+                  ) : (
+                    availableStocks.map((stock) => (
+                      <div
+                        key={stock.symbol}
+                        role="listitem"
+                        className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                       >
-                        Add
-                      </Button>
-                    </div>
-                  ))}
+                        <div className="min-w-0">
+                          <div className="font-semibold text-slate-900 dark:text-white">{stock.symbol}</div>
+                          <div className="text-xs text-slate-400 dark:text-slate-500 truncate">{stock.name}</div>
+                        </div>
+                        <div className="flex items-center gap-3 flex-shrink-0">
+                          <div className="text-right">
+                            <div className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                              {formatCurrency(stock.price)}
+                            </div>
+                            <div className={cn('text-xs', stock.change >= 0 ? 'text-emerald-600' : 'text-red-600')}>
+                              {formatPercent(stock.changePercent)}
+                            </div>
+                          </div>
+                          <Button size="sm" onClick={() => handleAddStock(stock.symbol)} aria-label={`Add ${stock.symbol} to watchlist`}>
+                            Add
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </DialogContent>
@@ -171,225 +163,165 @@ export default function WatchlistPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center">
-                <Star className="w-5 h-5 text-yellow-500 mr-2" />
-                <div>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">Total Stocks</p>
-                  <p className="text-2xl font-bold">{watchlist.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center">
-                <TrendingUp className="w-5 h-5 text-emerald-500 mr-2" />
-                <div>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">Gainers</p>
-                  <p className="text-2xl font-bold text-emerald-600">
-                    {watchlist.filter(item => {
-                      const stock = AVAILABLE_STOCKS.find(s => s.symbol === item.symbol);
-                      return stock && stock.change > 0;
-                    }).length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center">
-                <TrendingDown className="w-5 h-5 text-red-500 mr-2" />
-                <div>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">Losers</p>
-                  <p className="text-2xl font-bold text-red-600">
-                    {watchlist.filter(item => {
-                      const stock = AVAILABLE_STOCKS.find(s => s.symbol === item.symbol);
-                      return stock && stock.change < 0;
-                    }).length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center">
-                <Bell className="w-5 h-5 text-blue-500 mr-2" />
-                <div>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">Active Alerts</p>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {watchlist.filter(item => item.alertsEnabled).length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <StockMetricCard icon={Star} label="Total Stocks" value={String(stats.total)} iconClass="text-yellow-600" iconBg="bg-yellow-50 dark:bg-yellow-950" />
+          <StockMetricCard icon={TrendingUp} label="Gainers" value={String(gainers)} iconClass="text-emerald-600" iconBg="bg-emerald-50 dark:bg-emerald-950" />
+          <StockMetricCard icon={TrendingDown} label="Losers" value={String(losers)} iconClass="text-red-600" iconBg="bg-red-50 dark:bg-red-950" />
+          <StockMetricCard icon={Bell} label="Active Alerts" value={String(stats.activeAlerts)} iconClass="text-blue-600" iconBg="bg-blue-50 dark:bg-blue-950" />
         </div>
-      </div>
+      </header>
 
-      {/* Watchlist Items */}
+      {/* Watchlist */}
       {watchlist.length === 0 ? (
         <Card>
-          <CardContent className="p-12 text-center">
-            <Star className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Your watchlist is empty</h3>
-            <p className="text-slate-600 dark:text-slate-400 mb-4">
-              Add stocks to track their performance and set price alerts
-            </p>
-            <Button onClick={() => setIsAddDialogOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Your First Stock
-            </Button>
+          <CardContent className="p-0">
+            <EmptyState
+              icon={Star}
+              title="Your watchlist is empty"
+              description="Add stocks to track their performance, set price targets, and receive alerts when they move."
+              actionLabel="Add Your First Stock"
+              onAction={() => setIsAddDialogOpen(true)}
+            />
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4">
+        <div className="space-y-3" role="list" aria-label="Watchlist items">
           {watchlist.map((item) => {
-            const currentStock = AVAILABLE_STOCKS.find(s => s.symbol === item.symbol);
-            const alerts = getAlertStatus(item);
-            
+            const liveStock = STOCK_MAP[item.symbol];
+            const isGaining = (liveStock?.change ?? 0) >= 0;
+            const targetReached = item.targetPrice && liveStock && liveStock.price >= item.targetPrice;
+
             return (
-              <Card key={item.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <div>
-                        <h3 className="text-xl font-bold flex items-center">
-                          {item.symbol}
-                          {alerts.length > 0 && (
-                            <Badge variant="destructive" className="ml-2">
-                              <AlertTriangle className="w-3 h-3 mr-1" />
-                              Alert
+              <Card
+                key={item.id}
+                role="listitem"
+                className={cn(
+                  'transition-shadow hover:shadow-md',
+                  targetReached && 'border-l-4 border-l-emerald-500'
+                )}
+              >
+                <CardContent className="px-5 py-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    {/* Stock info */}
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                        <span className="text-white font-bold text-sm">{item.symbol[0]}</span>
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-bold text-slate-900 dark:text-white">{item.symbol}</h3>
+                          {targetReached && (
+                            <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 text-xs gap-1">
+                              <Target className="w-3 h-3" aria-hidden="true" />
+                              Target Reached
                             </Badge>
                           )}
-                        </h3>
-                        <p className="text-slate-600 dark:text-slate-400">{item.name}</p>
-                        <p className="text-sm text-slate-500">
-                          Added {item.addedDate.toLocaleDateString()}
-                        </p>
+                          {item.alertsEnabled && (
+                            <Badge variant="outline" className="text-xs gap-1">
+                              <Bell className="w-3 h-3" aria-hidden="true" />
+                              Alerts On
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-xs text-slate-400 dark:text-slate-500 truncate">{item.name}</p>
+                        <p className="text-xs text-slate-400 dark:text-slate-500">Added {formatDate(item.addedDate)}</p>
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-6">
-                      {/* Current Price */}
+                    {/* Price info */}
+                    <div className="flex items-center gap-6 flex-shrink-0">
                       <div className="text-right">
-                        <div className="text-2xl font-bold">
-                          ${currentStock?.price.toFixed(2) || item.currentPrice.toFixed(2)}
+                        <div className="text-xs text-slate-400 dark:text-slate-500">Current Price</div>
+                        <div className="text-lg font-bold text-slate-900 dark:text-white">
+                          {liveStock ? formatCurrency(liveStock.price) : formatCurrency(item.currentPrice)}
                         </div>
-                        {currentStock && (
-                          <div className={`flex items-center ${
-                            currentStock.change >= 0 ? 'text-emerald-600' : 'text-red-600'
-                          }`}>
-                            {currentStock.change >= 0 ? (
-                              <TrendingUp className="w-4 h-4 mr-1" />
-                            ) : (
-                              <TrendingDown className="w-4 h-4 mr-1" />
-                            )}
-                            {currentStock.change >= 0 ? '+' : ''}{currentStock.change.toFixed(2)} 
-                            ({currentStock.changePercent.toFixed(2)}%)
+                        {liveStock && (
+                          <div className={cn('text-xs font-medium', isGaining ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400')}>
+                            {formatChange(liveStock.change)} ({formatPercent(liveStock.changePercent)})
                           </div>
                         )}
                       </div>
 
-                      {/* Target Price */}
                       <div className="text-right">
-                        <div className="text-sm text-slate-600 dark:text-slate-400">Target</div>
-                        <div className="text-lg font-semibold">
-                          {item.targetPrice ? `$${item.targetPrice.toFixed(2)}` : 'Not set'}
+                        <div className="text-xs text-slate-400 dark:text-slate-500">Target</div>
+                        <div className="text-base font-semibold text-slate-700 dark:text-slate-300">
+                          {item.targetPrice ? formatCurrency(item.targetPrice) : '—'}
                         </div>
                       </div>
 
                       {/* Actions */}
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center gap-1.5">
                         <Dialog>
                           <DialogTrigger asChild>
-                            <Button variant="outline" size="sm" onClick={() => {
-                              setEditingItem(item);
-                              setNewTargetPrice(item.targetPrice?.toString() || '');
-                            }}>
-                              <Edit className="w-4 h-4" />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              aria-label={`Edit ${item.symbol}`}
+                              onClick={() => { setEditingItem(item); setNewTargetPrice(item.targetPrice?.toString() ?? ''); setTargetPriceError(''); }}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Edit className="w-3.5 h-3.5" aria-hidden="true" />
                             </Button>
                           </DialogTrigger>
                           <DialogContent>
                             <DialogHeader>
                               <DialogTitle>Edit {item.symbol}</DialogTitle>
-                              <DialogDescription>
-                                Update target price and alert settings
-                              </DialogDescription>
+                              <DialogDescription>Update target price and alert settings</DialogDescription>
                             </DialogHeader>
-                            <div className="space-y-4">
-                              <div>
-                                <Label htmlFor="targetPrice">Target Price</Label>
+                            <div className="space-y-5 pt-2">
+                              <div className="space-y-2">
+                                <Label htmlFor={`target-${item.id}`}>Target Price (USD)</Label>
                                 <Input
-                                  id="targetPrice"
+                                  id={`target-${item.id}`}
                                   type="number"
                                   step="0.01"
-                                  placeholder="Enter target price"
+                                  min="0.01"
+                                  placeholder="e.g. 200.00"
                                   value={newTargetPrice}
-                                  onChange={(e) => setNewTargetPrice(e.target.value)}
+                                  onChange={(e) => { setNewTargetPrice(e.target.value); setTargetPriceError(''); }}
+                                  aria-describedby={targetPriceError ? `target-error-${item.id}` : undefined}
+                                  aria-invalid={!!targetPriceError}
                                 />
+                                {targetPriceError && (
+                                  <p id={`target-error-${item.id}`} className="text-xs text-red-600 dark:text-red-400" role="alert">
+                                    {targetPriceError}
+                                  </p>
+                                )}
                               </div>
-                              <div className="flex items-center space-x-2">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <Label htmlFor={`alerts-${item.id}`}>Enable alerts</Label>
+                                  <p className="text-xs text-slate-400 dark:text-slate-500">Get notified on price movements</p>
+                                </div>
                                 <Switch
-                                  id="alerts"
-                                  checked={editingItem?.alertsEnabled || false}
-                                  onCheckedChange={(checked) => 
-                                    setEditingItem(prev => prev ? {...prev, alertsEnabled: checked} : null)
+                                  id={`alerts-${item.id}`}
+                                  checked={editingItem?.alertsEnabled ?? item.alertsEnabled}
+                                  onCheckedChange={(checked) =>
+                                    setEditingItem((prev) => prev ? { ...prev, alertsEnabled: checked } : null)
                                   }
+                                  aria-label="Toggle price alerts"
                                 />
-                                <Label htmlFor="alerts">Enable alerts</Label>
                               </div>
-                              <div className="flex space-x-2">
-                                <Button
-                                  onClick={() => {
-                                    if (editingItem) {
-                                      updateWatchlistItem(editingItem.id, {
-                                        targetPrice: newTargetPrice ? parseFloat(newTargetPrice) : undefined,
-                                        alertsEnabled: editingItem.alertsEnabled
-                                      });
-                                    }
-                                  }}
-                                >
-                                  Save Changes
-                                </Button>
-                                <Button variant="outline" onClick={() => setEditingItem(null)}>
-                                  Cancel
-                                </Button>
+                              <div className="flex gap-2 pt-2">
+                                <Button onClick={handleSaveEdit} className="flex-1">Save Changes</Button>
+                                <Button variant="outline" onClick={() => { setEditingItem(null); setTargetPriceError(''); }}>Cancel</Button>
                               </div>
                             </div>
                           </DialogContent>
                         </Dialog>
-                        
+
                         <Button
                           variant="outline"
                           size="sm"
+                          aria-label={`Remove ${item.symbol} from watchlist`}
                           onClick={() => removeFromWatchlist(item.id)}
+                          className="h-8 w-8 p-0 text-slate-400 hover:text-red-600 hover:border-red-200"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                         </Button>
                       </div>
                     </div>
                   </div>
-
-                  {/* Alerts */}
-                  {alerts.length > 0 && (
-                    <div className="mt-4 space-y-2">
-                      {alerts.map((alert, index) => (
-                        <Alert key={index} className="border-l-4 border-l-amber-400">
-                          <AlertTriangle className="h-4 w-4" />
-                          <AlertTitle>Alert</AlertTitle>
-                          <AlertDescription>{alert}</AlertDescription>
-                        </Alert>
-                      ))}
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             );
