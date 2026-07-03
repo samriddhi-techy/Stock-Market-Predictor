@@ -49,7 +49,7 @@ export default function SignupModal({ isOpen, onClose, onSwitchToLogin }: Signup
       setPassword('');
       setConfirmPassword('');
     } catch (err: any) {
-      setError(err.message || 'Failed to create account. Please try again.');
+      setError(err?.message || 'Failed to create account. Please try again or configure Supabase.');
     } finally {
       setIsLoading(false);
     }
@@ -58,9 +58,8 @@ export default function SignupModal({ isOpen, onClose, onSwitchToLogin }: Signup
   const handleGoogleSignIn = async () => {
     try {
       await signInWithGoogle();
-      onClose();
     } catch (err: any) {
-      setError(err.message || 'Failed to sign in with Google.');
+      setError(err?.message || 'Failed to sign in with Google. Please configure Supabase.');
     }
   };
 

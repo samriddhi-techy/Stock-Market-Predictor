@@ -34,7 +34,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginM
       setEmail('');
       setPassword('');
     } catch (err: any) {
-      setError(err.message || 'Failed to sign in. Please check your credentials.');
+      setError(err?.message || 'Failed to sign in. Please check your credentials or configure Supabase.');
     } finally {
       setIsLoading(false);
     }
@@ -43,9 +43,8 @@ export default function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginM
   const handleGoogleSignIn = async () => {
     try {
       await signInWithGoogle();
-      onClose();
     } catch (err: any) {
-      setError(err.message || 'Failed to sign in with Google.');
+      setError(err?.message || 'Failed to sign in with Google. Please configure Supabase.');
     }
   };
 

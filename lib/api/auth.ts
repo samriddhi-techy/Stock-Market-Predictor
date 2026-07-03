@@ -21,16 +21,20 @@ export async function signUp(email: string, password: string, name: string) {
   if (error) throw error;
 
   if (data.user) {
-    await createUserProfile({
-      id: data.user.id,
-      name,
-      bio: '',
-      location: '',
-      phone: '',
-      avatar_url: ''
-    });
-
-    await createUserPreferences(data.user.id);
+    try {
+      await createUserProfile({
+        id: data.user.id,
+        name,
+        bio: '',
+        location: '',
+        phone: '',
+        avatar_url: ''
+      });
+  
+      await createUserPreferences(data.user.id);
+    } catch (err) {
+      console.log('Profile/preferences may already exist:', err);
+    }
   }
 
   return data;
@@ -63,8 +67,12 @@ export async function signInWithGoogle() {
 }
 
 export async function signOut() {
-  const { error } = await supabase.auth.signOut();
-  if (error) throw error;
+  try {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+  } catch {
+    // Ignore errors when signing out
+  }
 }
 
 export async function getCurrentUser() {
@@ -87,37 +95,43 @@ export async function updatePassword(newPassword: string) {
 }
 
 export function onAuthStateChange(callback: (user: AuthUser | null) => void) {
-  const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-    if (session?.user) {
-      // For OAuth users, make sure we create their profile if it doesn't exist
-      const name = session.user.user_metadata.name || session.user.email?.split('@')[0] || '';
-      const avatar_url = session.user.user_metadata.avatar_url || '';
-      
-      try {
-        await createUserProfile({
-          id: session.user.id,
-          name,
-          bio: '',
-          location: '',
-          phone: '',
-          avatar_url
-        });
+  try {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        // For OAuth users, make sure we create their profile if it doesn't exist
+        const name = session.user.user_metadata.name || session.user.email?.split('@')[0] || '';
+        const avatar_url = session.user.user_metadata.avatar_url || '';
         
-        await createUserPreferences(session.user.id);
-      } catch (err) {
-        // Ignore errors if profile already exists
-        console.log('Profile may already exist:', err);
+        try {
+          await createUserProfile({
+            id: session.user.id,
+            name,
+            bio: '',
+            location: '',
+            phone: '',
+            avatar_url
+          });
+          
+          await createUserPreferences(session.user.id);
+        } catch (err) {
+          // Ignore errors if profile already exists
+          console.log('Profile may already exist:', err);
+        }
+        
+        callback({
+          id: session.user.id,
+          email: session.user.email || '',
+          name
+        });
+      } else {
+        callback(null);
       }
-      
-      callback({
-        id: session.user.id,
-        email: session.user.email || '',
-        name
-      });
-    } else {
-      callback(null);
-    }
-  });
+    });
 
-  return subscription;
+    return subscription;
+  } catch (err) {
+    console.error('Error setting up auth state change listener:', err);
+    // Return a dummy subscription object with unsubscribe
+    return { unsubscribe: () => {} };
+  }
 }

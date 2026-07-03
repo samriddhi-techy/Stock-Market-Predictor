@@ -30,37 +30,59 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     checkUser();
 
-    const subscription = onAuthStateChange(async (authUser) => {
-      if (authUser) {
-        const profile = await getUserProfile(authUser.id);
-        setUser({
-          id: authUser.id,
-          email: authUser.email,
-          name: profile?.name || authUser.name || authUser.email,
-          avatar: profile?.avatar_url
-        });
-      } else {
-        setUser(null);
-      }
-      setLoading(false);
-    });
+    try {
+      const subscription = onAuthStateChange(async (authUser) => {
+        if (authUser) {
+          try {
+            const profile = await getUserProfile(authUser.id);
+            setUser({
+              id: authUser.id,
+              email: authUser.email,
+              name: profile?.name || authUser.name || authUser.email,
+              avatar: profile?.avatar_url
+            });
+          } catch {
+            setUser({
+              id: authUser.id,
+              email: authUser.email,
+              name: authUser.name || authUser.email,
+              avatar: authUser.user_metadata?.avatar_url
+            });
+          }
+        } else {
+          setUser(null);
+        }
+        setLoading(false);
+      });
 
-    return () => {
-      subscription.unsubscribe();
-    };
+      return () => {
+        try { subscription.unsubscribe(); } catch {}
+      };
+    } catch {
+      setLoading(false);
+    }
   }, []);
 
   async function checkUser() {
     try {
       const authUser = await getCurrentUser();
       if (authUser) {
-        const profile = await getUserProfile(authUser.id);
-        setUser({
-          id: authUser.id,
-          email: authUser.email || '',
-          name: profile?.name || authUser.user_metadata?.name || authUser.email || '',
-          avatar: profile?.avatar_url
-        });
+        try {
+          const profile = await getUserProfile(authUser.id);
+          setUser({
+            id: authUser.id,
+            email: authUser.email || '',
+            name: profile?.name || authUser.user_metadata?.name || authUser.email || '',
+            avatar: profile?.avatar_url
+          });
+        } catch {
+          setUser({
+            id: authUser.id,
+            email: authUser.email || '',
+            name: authUser.user_metadata?.name || authUser.email || '',
+            avatar: authUser.user_metadata?.avatar_url
+          });
+        }
       }
     } catch (error) {
       console.error('Error checking user:', error);
@@ -82,7 +104,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signOut() {
-    await apiSignOut();
+    try {
+      await apiSignOut();
+    } catch {}
     setUser(null);
   }
 
