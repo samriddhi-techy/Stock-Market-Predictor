@@ -63,6 +63,16 @@ export default function ProfilePage() {
 
   // Load profile and preferences from Supabase
   useEffect(() => {
+    // First, initialize with auth user data immediately
+    if (authUser) {
+      setProfile(prev => ({
+        ...prev,
+        name: authUser.name || prev.name,
+        email: authUser.email || prev.email,
+        avatar: authUser.avatar || prev.avatar
+      }));
+    }
+
     async function loadData() {
       if (isDemoMode || !authUser) {
         setLoading(false);
@@ -87,12 +97,18 @@ export default function ProfilePage() {
             phone: profileData.value.phone || '',
             location: profileData.value.location || '',
             bio: profileData.value.bio || '',
-            avatar: profileData.value.avatar_url || authUser.avatar,
+            avatar: profileData.value.avatar_url || authUser.avatar || prev.avatar,
             joinDate: profileData.value.created_at || prev.joinDate
           }));
           setIsEditing(false);
         } else {
-          // If no profile, set to edit mode
+          // If no profile, still use auth user data and set to edit mode
+          setProfile(prev => ({
+            ...prev,
+            name: authUser.name || prev.name,
+            email: authUser.email || prev.email,
+            avatar: authUser.avatar || prev.avatar
+          }));
           setIsEditing(true);
         }
 
@@ -108,6 +124,15 @@ export default function ProfilePage() {
         }
       } catch (error) {
         console.error('Error loading profile:', error);
+        // Still use auth user data even if load fails
+        if (authUser) {
+          setProfile(prev => ({
+            ...prev,
+            name: authUser.name || prev.name,
+            email: authUser.email || prev.email,
+            avatar: authUser.avatar || prev.avatar
+          }));
+        }
         setIsEditing(true); // Auto-edit if load fails
       } finally {
         setLoading(false);
