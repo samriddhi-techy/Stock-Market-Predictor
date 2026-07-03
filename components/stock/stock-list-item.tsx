@@ -21,10 +21,10 @@ function convertStockToMock(stock: Stock): MockStock {
     marketCap: stock.marketCap,
     prediction: stock.prediction,
     confidence: stock.confidence,
-    sector: stock.sector,
-    pe: stock.pe,
-    high52w: stock.high52w,
-    low52w: stock.low52w,
+    sector: stock.sector ?? '',
+    pe: stock.pe ?? 0,
+    high52w: stock.high52w ?? 0,
+    low52w: stock.low52w ?? 0,
   };
 }
 

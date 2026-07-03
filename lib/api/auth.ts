@@ -1,4 +1,4 @@
-import { supabase } from '../supabase';
+import { supabase, isSupabaseConfigured } from '../supabase';
 import { createUserProfile, createUserPreferences } from './profile';
 
 export interface AuthUser {
@@ -7,7 +7,18 @@ export interface AuthUser {
   name?: string;
 }
 
+// Mock user for development when Supabase isn't configured
+const MOCK_USER_ID = 'mock-user-123';
+const MOCK_USER_EMAIL = 'demo@stockai.app';
+const MOCK_USER_NAME = 'Demo User';
+
 export async function signUp(email: string, password: string, name: string) {
+  if (!isSupabaseConfigured) {
+    // Mock signup for development
+    console.log('Mock signup (Supabase not configured)');
+    return { user: { id: MOCK_USER_ID, email, user_metadata: { name } }, session: null };
+  }
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -41,6 +52,15 @@ export async function signUp(email: string, password: string, name: string) {
 }
 
 export async function signIn(email: string, password: string) {
+  if (!isSupabaseConfigured) {
+    // Mock signin for development
+    console.log('Mock signin (Supabase not configured)');
+    return { 
+      user: { id: MOCK_USER_ID, email, user_metadata: { name: MOCK_USER_NAME } }, 
+      session: { user: { id: MOCK_USER_ID, email, user_metadata: { name: MOCK_USER_NAME } } } 
+    };
+  }
+
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password
@@ -51,6 +71,15 @@ export async function signIn(email: string, password: string) {
 }
 
 export async function signInWithGoogle() {
+  if (!isSupabaseConfigured) {
+    // Mock Google signin for development
+    console.log('Mock Google signin (Supabase not configured)');
+    return { 
+      user: { id: MOCK_USER_ID, email: MOCK_USER_EMAIL, user_metadata: { name: MOCK_USER_NAME, avatar_url: '' } }, 
+      session: { user: { id: MOCK_USER_ID, email: MOCK_USER_EMAIL, user_metadata: { name: MOCK_USER_NAME, avatar_url: '' } } } 
+    };
+  }
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
@@ -67,6 +96,12 @@ export async function signInWithGoogle() {
 }
 
 export async function signOut() {
+  if (!isSupabaseConfigured) {
+    // Mock signout
+    console.log('Mock signout (Supabase not configured)');
+    return;
+  }
+
   try {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
@@ -76,6 +111,12 @@ export async function signOut() {
 }
 
 export async function getCurrentUser() {
+  if (!isSupabaseConfigured) {
+    // Mock user
+    console.log('Mock getCurrentUser (Supabase not configured)');
+    return null; // We'll handle mock user in auth context instead
+  }
+
   const { data: { user }, error } = await supabase.auth.getUser();
 
   if (error) throw error;
@@ -83,11 +124,19 @@ export async function getCurrentUser() {
 }
 
 export async function resetPassword(email: string) {
+  if (!isSupabaseConfigured) {
+    throw new Error('Password reset requires Supabase configuration');
+  }
+
   const { error } = await supabase.auth.resetPasswordForEmail(email);
   if (error) throw error;
 }
 
 export async function updatePassword(newPassword: string) {
+  if (!isSupabaseConfigured) {
+    throw new Error('Password update requires Supabase configuration');
+  }
+
   const { error } = await supabase.auth.updateUser({
     password: newPassword
   });
@@ -95,6 +144,12 @@ export async function updatePassword(newPassword: string) {
 }
 
 export function onAuthStateChange(callback: (user: AuthUser | null) => void) {
+  if (!isSupabaseConfigured) {
+    // Mock listener - do nothing
+    console.log('Mock onAuthStateChange (Supabase not configured)');
+    return { unsubscribe: () => {} };
+  }
+
   try {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {

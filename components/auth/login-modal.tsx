@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
-import { Eye, EyeOff, Mail, Lock, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, AlertCircle, Info } from 'lucide-react';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -16,7 +16,7 @@ interface LoginModalProps {
 }
 
 export default function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginModalProps) {
-  const { signIn, signInWithGoogle } = useAuth();
+  const { signIn, signInWithGoogle, isDemoMode } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -43,6 +43,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginM
   const handleGoogleSignIn = async () => {
     try {
       await signInWithGoogle();
+      onClose();
     } catch (err: any) {
       setError(err?.message || 'Failed to sign in with Google. Please configure Supabase.');
     }
@@ -57,6 +58,15 @@ export default function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginM
             Sign in to your StockAI account to continue
           </DialogDescription>
         </DialogHeader>
+
+        {isDemoMode && (
+          <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md flex items-start">
+            <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-blue-600 dark:text-blue-400">
+              Demo Mode: You're using the app without Supabase. Create a .env.local file to enable full functionality.
+            </p>
+          </div>
+        )}
         
         <Button 
           type="button" 

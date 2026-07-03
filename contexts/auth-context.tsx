@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { getCurrentUser, onAuthStateChange, signIn as apiSignIn, signOut as apiSignOut, signUp as apiSignUp, signInWithGoogle as apiSignInWithGoogle } from '@/lib/api/auth';
 import { getUserProfile } from '@/lib/api/profile';
+import { isSupabaseConfigured } from '@/lib/supabase';
 
 interface User {
   id: string;
@@ -19,6 +20,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   isAuthenticated: boolean;
+  isDemoMode: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -26,44 +28,66 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [localUser, setLocalUser] = useState<User | null>(null); // For demo mode
+
+  // Demo mode user
+  const DEMO_USER: User = {
+    id: 'demo-user-123',
+    email: 'demo@stockai.app',
+    name: 'Demo User'
+  };
+
+  // Check localStorage for demo mode user on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !isSupabaseConfigured) {
+      const savedDemoUser = localStorage.getItem('demoUser');
+      if (savedDemoUser) {
+        setLocalUser(JSON.parse(savedDemoUser));
+      }
+    }
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
-    checkUser();
+    if (isSupabaseConfigured) {
+      checkUser();
 
-    try {
-      const subscription = onAuthStateChange(async (authUser) => {
-        if (authUser) {
-          try {
-            const profile = await getUserProfile(authUser.id);
-            setUser({
-              id: authUser.id,
-              email: authUser.email,
-              name: profile?.name || authUser.name || authUser.email,
-              avatar: profile?.avatar_url
-            });
-          } catch {
-            setUser({
-              id: authUser.id,
-              email: authUser.email,
-              name: authUser.name || authUser.email,
-              avatar: authUser.user_metadata?.avatar_url
-            });
+      try {
+        const subscription = onAuthStateChange(async (authUser) => {
+          if (authUser) {
+            try {
+              const profile = await getUserProfile(authUser.id);
+              setUser({
+                id: authUser.id,
+                email: authUser.email,
+                name: profile?.name || authUser.name || authUser.email,
+                avatar: profile?.avatar_url
+              });
+            } catch {
+              setUser({
+                id: authUser.id,
+                email: authUser.email,
+                name: authUser.name || authUser.email,
+                avatar: authUser.user_metadata?.avatar_url
+              });
+            }
+          } else {
+            setUser(null);
           }
-        } else {
-          setUser(null);
-        }
-        setLoading(false);
-      });
+        });
 
-      return () => {
-        try { subscription.unsubscribe(); } catch {}
-      };
-    } catch {
-      setLoading(false);
+        return () => {
+          try { subscription.unsubscribe(); } catch {}
+        };
+      } catch {
+        // Ignore
+      }
     }
   }, []);
 
   async function checkUser() {
+    if (!isSupabaseConfigured) return;
+
     try {
       const authUser = await getCurrentUser();
       if (authUser) {
@@ -86,39 +110,66 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error('Error checking user:', error);
-    } finally {
-      setLoading(false);
     }
   }
 
   async function signIn(email: string, password: string) {
-    await apiSignIn(email, password);
+    if (!isSupabaseConfigured) {
+      // Demo login
+      const newLocalUser = { ...DEMO_USER, email };
+      setLocalUser(newLocalUser);
+      localStorage.setItem('demoUser', JSON.stringify(newLocalUser));
+    } else {
+      await apiSignIn(email, password);
+    }
   }
 
   async function signUp(name: string, email: string, password: string) {
-    await apiSignUp(email, password, name);
+    if (!isSupabaseConfigured) {
+      // Demo signup
+      const newLocalUser = { ...DEMO_USER, email, name };
+      setLocalUser(newLocalUser);
+      localStorage.setItem('demoUser', JSON.stringify(newLocalUser));
+    } else {
+      await apiSignUp(email, password, name);
+    }
   }
 
   async function signInWithGoogle() {
-    await apiSignInWithGoogle();
+    if (!isSupabaseConfigured) {
+      // Demo Google login
+      setLocalUser(DEMO_USER);
+      localStorage.setItem('demoUser', JSON.stringify(DEMO_USER));
+    } else {
+      await apiSignInWithGoogle();
+    }
   }
 
   async function signOut() {
-    try {
-      await apiSignOut();
-    } catch {}
-    setUser(null);
+    if (!isSupabaseConfigured) {
+      // Demo logout
+      setLocalUser(null);
+      localStorage.removeItem('demoUser');
+    } else {
+      try {
+        await apiSignOut();
+      } catch {}
+      setUser(null);
+    }
   }
+
+  const activeUser = isSupabaseConfigured ? user : localUser;
 
   return (
     <AuthContext.Provider value={{
-      user,
+      user: activeUser,
       loading,
       signIn,
       signUp,
       signInWithGoogle,
       signOut,
-      isAuthenticated: !!user
+      isAuthenticated: !!activeUser,
+      isDemoMode: !isSupabaseConfigured
     }}>
       {children}
     </AuthContext.Provider>
