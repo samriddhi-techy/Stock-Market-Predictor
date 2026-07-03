@@ -115,7 +115,7 @@ export default function ProfilePage() {
       <header className="mb-8">
         <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
           <div className="p-2 bg-blue-50 dark:bg-blue-950 rounded-xl">
-            <User className="w-6 h-6 text-blue-600" aria-hidden="true" />
+            <User className="w-6 h-6 text-blue-600 dark:text-blue-400" aria-hidden="true" />
           </div>
           Profile Settings
         </h1>
@@ -170,10 +170,10 @@ export default function ProfilePage() {
                 {stats.map((stat) => {
                   const Icon = stat.icon;
                   return (
-                    <div key={stat.label} className="text-center p-2 rounded-xl bg-slate-50 dark:bg-slate-850/50">
+                    <div key={stat.label} className="text-center p-2 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700">
                       <Icon className={`w-5 h-5 mx-auto mb-1 ${stat.color}`} aria-hidden="true" />
-                      <div className="text-lg font-bold text-slate-900 dark:text-white">{stat.value}</div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                      <div className="text-lg font-bold text-slate-900 dark:text-slate-50">{stat.value}</div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-300 font-medium">
                         {stat.label}
                       </div>
                     </div>
