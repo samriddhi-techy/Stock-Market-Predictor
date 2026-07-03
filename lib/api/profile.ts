@@ -23,13 +23,19 @@ export interface UserPreferences {
 }
 
 export async function getUserProfile(userId?: string) {
-  let query = supabase.from('user_profiles').select('*');
-
-  if (userId) {
-    query = query.eq('id', userId);
+  if (!userId) {
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
+    userId = user?.id;
   }
 
-  const { data, error } = await query.maybeSingle();
+  if (!userId) throw new Error('No user ID provided');
+
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .select('*')
+    .eq('id', userId)
+    .maybeSingle();
 
   if (error) throw error;
   return data as UserProfile | null;
@@ -60,12 +66,16 @@ export async function updateUserProfile(updates: {
   phone?: string;
   avatar_url?: string;
 }) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
   const { data, error } = await supabase
     .from('user_profiles')
     .update({
       ...updates,
       updated_at: new Date().toISOString()
     })
+    .eq('id', user.id)
     .select()
     .single();
 
@@ -74,9 +84,13 @@ export async function updateUserProfile(updates: {
 }
 
 export async function getUserPreferences() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
   const { data, error } = await supabase
     .from('user_preferences')
     .select('*')
+    .eq('user_id', user.id)
     .maybeSingle();
 
   if (error) throw error;
@@ -86,7 +100,15 @@ export async function getUserPreferences() {
 export async function createUserPreferences(userId: string) {
   const { data, error } = await supabase
     .from('user_preferences')
-    .insert({ user_id: userId })
+    .insert({ 
+      user_id: userId,
+      price_alerts: true,
+      market_news: true,
+      portfolio_updates: true,
+      weekly_reports: false,
+      email_notifications: true,
+      push_notifications: true
+    })
     .select()
     .single();
 
@@ -95,12 +117,16 @@ export async function createUserPreferences(userId: string) {
 }
 
 export async function updateUserPreferences(updates: Partial<Omit<UserPreferences, 'user_id' | 'updated_at'>>) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
   const { data, error } = await supabase
     .from('user_preferences')
     .update({
       ...updates,
       updated_at: new Date().toISOString()
     })
+    .eq('user_id', user.id)
     .select()
     .single();
 

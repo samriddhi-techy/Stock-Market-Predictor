@@ -10,9 +10,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/auth-context';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { getUserProfile, createUserProfile, updateUserProfile, getUserPreferences, createUserPreferences, updateUserPreferences } from '@/lib/api/profile';
+import { isSupabaseConfigured } from '@/lib/supabase';
 import {
   User, Mail, Phone, MapPin, Calendar, Bell, Shield, CreditCard,
   TrendingUp, Target, Activity, Settings
@@ -25,29 +28,18 @@ interface ProfileErrors {
 }
 
 export default function ProfilePage() {
-  const { user: authUser } = useAuth();
+  const { user: authUser, isDemoMode } = useAuth();
+  const [loading, setLoading] = useState(true);
   
   const [profile, setProfile] = useState({
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    phone: '+1 (555) 123-4567',
-    location: 'New York, NY',
-    joinDate: '2024-01-15',
-    avatar: undefined as string | undefined,
-    bio: 'Passionate investor focused on technology stocks and long-term growth strategies.'
+    name: authUser?.name || '',
+    email: authUser?.email || '',
+    phone: '',
+    location: '',
+    joinDate: new Date().toISOString().split('T')[0],
+    avatar: authUser?.avatar as string | undefined,
+    bio: ''
   });
-
-  // Sync auth state if available
-  useEffect(() => {
-    if (authUser) {
-      setProfile(prev => ({
-        ...prev,
-        name: authUser.name || prev.name,
-        email: authUser.email || prev.email,
-        avatar: authUser.avatar || prev.avatar
-      }));
-    }
-  }, [authUser]);
 
   const [notifications, setNotifications] = useState({
     priceAlerts: true,
@@ -58,16 +50,72 @@ export default function ProfilePage() {
     pushNotifications: true
   });
 
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(!isDemoMode); // Auto-start editing if no Supabase or new user
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<ProfileErrors>({});
 
   const stats = [
-    { label: 'Stocks Tracked', value: '12', icon: TrendingUp, color: 'text-blue-600 dark:text-blue-400' },
-    { label: 'Active Alerts', value: '8', icon: Bell, color: 'text-yellow-600 dark:text-yellow-400' },
-    { label: 'Predictions Made', value: '45', icon: Target, color: 'text-emerald-600 dark:text-emerald-400' },
-    { label: 'Days Active', value: '89', icon: Activity, color: 'text-purple-600 dark:text-purple-400' }
+    { label: 'Stocks Tracked', value: '0', icon: TrendingUp, color: 'text-blue-600 dark:text-blue-400' },
+    { label: 'Active Alerts', value: '0', icon: Bell, color: 'text-yellow-600 dark:text-yellow-400' },
+    { label: 'Predictions Made', value: '0', icon: Target, color: 'text-emerald-600 dark:text-emerald-400' },
+    { label: 'Days Active', value: '0', icon: Activity, color: 'text-purple-600 dark:text-purple-400' }
   ];
+
+  // Load profile and preferences from Supabase
+  useEffect(() => {
+    async function loadData() {
+      if (isDemoMode || !authUser) {
+        setLoading(false);
+        if (!authUser?.name) {
+          setIsEditing(true);
+        }
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const [profileData, preferencesData] = await Promise.allSettled([
+          getUserProfile(authUser.id),
+          getUserPreferences()
+        ]);
+
+        if (profileData.status === 'fulfilled' && profileData.value) {
+          setProfile(prev => ({
+            ...prev,
+            name: profileData.value.name || authUser.name || prev.name,
+            email: authUser.email || prev.email,
+            phone: profileData.value.phone || '',
+            location: profileData.value.location || '',
+            bio: profileData.value.bio || '',
+            avatar: profileData.value.avatar_url || authUser.avatar,
+            joinDate: profileData.value.created_at || prev.joinDate
+          }));
+          setIsEditing(false);
+        } else {
+          // If no profile, set to edit mode
+          setIsEditing(true);
+        }
+
+        if (preferencesData.status === 'fulfilled' && preferencesData.value) {
+          setNotifications({
+            priceAlerts: preferencesData.value.price_alerts,
+            marketNews: preferencesData.value.market_news,
+            portfolioUpdates: preferencesData.value.portfolio_updates,
+            weeklyReports: preferencesData.value.weekly_reports,
+            emailNotifications: preferencesData.value.email_notifications,
+            pushNotifications: preferencesData.value.push_notifications
+          });
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error);
+        setIsEditing(true); // Auto-edit if load fails
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadData();
+  }, [authUser, isDemoMode]);
 
   const validate = (): boolean => {
     const tempErrors: ProfileErrors = {};
@@ -92,12 +140,76 @@ export default function ProfilePage() {
       return;
     }
 
+    if (!authUser) {
+      toast.error('Please log in to save your profile.');
+      return;
+    }
+
     setIsSaving(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 800));
-    setIsSaving(false);
-    setIsEditing(false);
-    toast.success('Profile updated successfully!');
+    try {
+      // First, check if profile exists or create/update
+      if (isSupabaseConfigured) {
+        try {
+          // Try to update first
+          await updateUserProfile({
+            name: profile.name,
+            bio: profile.bio,
+            location: profile.location,
+            phone: profile.phone,
+            avatar_url: profile.avatar
+          });
+        } catch (error) {
+          // If update fails, try to create
+          try {
+            await createUserProfile({
+              id: authUser.id,
+              name: profile.name,
+              bio: profile.bio,
+              location: profile.location,
+              phone: profile.phone,
+              avatar_url: profile.avatar
+            });
+          } catch (createError) {
+            console.error('Error creating profile:', createError);
+            // Ignore if already exists
+          }
+        }
+
+        try {
+          await updateUserPreferences({
+            price_alerts: notifications.priceAlerts,
+            market_news: notifications.marketNews,
+            portfolio_updates: notifications.portfolioUpdates,
+            weekly_reports: notifications.weeklyReports,
+            email_notifications: notifications.emailNotifications,
+            push_notifications: notifications.pushNotifications
+          });
+        } catch (prefError) {
+          console.error('Error updating preferences:', prefError);
+          try {
+            await createUserPreferences(authUser.id);
+            await updateUserPreferences({
+              price_alerts: notifications.priceAlerts,
+              market_news: notifications.marketNews,
+              portfolio_updates: notifications.portfolioUpdates,
+              weekly_reports: notifications.weeklyReports,
+              email_notifications: notifications.emailNotifications,
+              push_notifications: notifications.pushNotifications
+            });
+          } catch (createPrefError) {
+            console.error('Error creating preferences:', createPrefError);
+          }
+        }
+      }
+
+      setIsSaving(false);
+      setIsEditing(false);
+      toast.success('Profile updated successfully!');
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      setIsSaving(false);
+      toast.error('Failed to save profile. Please try again.');
+    }
   };
 
   const handleNotificationChange = (key: string, value: boolean) => {
@@ -130,38 +242,57 @@ export default function ProfilePage() {
           <Card>
             <CardHeader className="text-center pb-4">
               <div className="relative w-24 h-24 mx-auto mb-4 group cursor-pointer" onClick={handleAvatarChange}>
-                <Avatar className="w-24 h-24 ring-4 ring-slate-100 dark:ring-slate-800">
-                  <AvatarImage src={profile.avatar} alt={profile.name} />
-                  <AvatarFallback className="text-2xl bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold">
-                    {profile.name.split(' ').map(n => n[0]).join('')}
-                  </AvatarFallback>
-                </Avatar>
+                {loading ? (
+                  <Skeleton className="w-24 h-24 rounded-full" />
+                ) : (
+                  <Avatar className="w-24 h-24 ring-4 ring-slate-100 dark:ring-slate-800">
+                    <AvatarImage src={profile.avatar} alt={profile.name} />
+                    <AvatarFallback className="text-2xl bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold">
+                      {profile.name.split(' ').map(n => n[0]).join('') || (authUser?.email ? authUser.email[0].toUpperCase() : 'U')}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
                 <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                   <span className="text-xs text-white font-semibold">Change</span>
                 </div>
               </div>
-              <CardTitle className="text-xl">{profile.name}</CardTitle>
-              <CardDescription>{profile.email}</CardDescription>
+              {loading ? (
+                <Skeleton className="h-6 w-32 mx-auto mb-1" />
+              ) : (
+                <CardTitle className="text-xl">{profile.name || 'Update your profile'}</CardTitle>
+              )}
+              {loading ? (
+                <Skeleton className="h-4 w-40 mx-auto" />
+              ) : (
+                <CardDescription>{profile.email}</CardDescription>
+              )}
               <div className="mt-2.5">
                 <Badge variant="secondary" className="px-3 py-0.5 text-xs font-semibold">
-                  Premium Member
+                  {isDemoMode ? 'Demo Mode' : 'Premium Member'}
                 </Badge>
               </div>
             </CardHeader>
             <CardContent className="space-y-5">
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center text-slate-600 dark:text-slate-400">
-                  <MapPin className="w-4 h-4 mr-2.5 text-slate-400" aria-hidden="true" />
-                  {profile.location}
+              {loading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
                 </div>
-                <div className="flex items-center text-slate-600 dark:text-slate-400">
-                  <Calendar className="w-4 h-4 mr-2.5 text-slate-400" aria-hidden="true" />
-                  Joined {new Date(profile.joinDate).toLocaleDateString('en-US', { 
-                    year: 'numeric', 
-                    month: 'long' 
-                  })}
+              ) : (
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center text-slate-600 dark:text-slate-400">
+                    <MapPin className="w-4 h-4 mr-2.5 text-slate-400" aria-hidden="true" />
+                    {profile.location || 'Add your location'}
+                  </div>
+                  <div className="flex items-center text-slate-600 dark:text-slate-400">
+                    <Calendar className="w-4 h-4 mr-2.5 text-slate-400" aria-hidden="true" />
+                    Joined {new Date(profile.joinDate).toLocaleDateString('en-US', { 
+                      year: 'numeric', 
+                      month: 'long' 
+                    })}
+                  </div>
                 </div>
-              </div>
+              )}
               
               <Separator />
               
@@ -171,11 +302,23 @@ export default function ProfilePage() {
                   const Icon = stat.icon;
                   return (
                     <div key={stat.label} className="text-center p-2 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700">
-                      <Icon className={`w-5 h-5 mx-auto mb-1 ${stat.color}`} aria-hidden="true" />
-                      <div className="text-lg font-bold text-slate-900 dark:text-slate-50">{stat.value}</div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-300 font-medium">
-                        {stat.label}
-                      </div>
+                      {loading ? (
+                        <Skeleton className="w-5 h-5 mx-auto mb-1 rounded" />
+                      ) : (
+                        <Icon className={`w-5 h-5 mx-auto mb-1 ${stat.color}`} aria-hidden="true" />
+                      )}
+                      {loading ? (
+                        <Skeleton className="h-6 w-12 mx-auto mb-1" />
+                      ) : (
+                        <div className="text-lg font-bold text-slate-900 dark:text-slate-50">{stat.value}</div>
+                      )}
+                      {loading ? (
+                        <Skeleton className="h-3 w-20 mx-auto" />
+                      ) : (
+                        <div className="text-[11px] text-slate-500 dark:text-slate-300 font-medium">
+                          {stat.label}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
