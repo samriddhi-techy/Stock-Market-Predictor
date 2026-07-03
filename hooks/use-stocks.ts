@@ -51,7 +51,8 @@ export function useStocks(symbol: string, timeframe: string = '1M') {
       };
 
       setStock(mappedStock);
-      setError('Live connection failed. Using cached/offline mock data.');
+      // Don't set an error when falling back to mock data
+      setError(null);
       
       // Notify user unobtrusively
       toast.warning(`Could not fetch live updates for ${symbol}. Showing cached data.`);

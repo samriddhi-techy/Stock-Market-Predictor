@@ -3,12 +3,15 @@
 import { useState, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Activity, Bell, BarChart3, DollarSign, TrendingUp, Target, History as HistoryIcon } from 'lucide-react';
 import { MOCK_STOCKS, MockStock } from '@/lib/constants';
+import { Stock } from '@/lib/types';
 import { useWatchlist } from '@/hooks/use-watchlist';
 import { useFavorites } from '@/hooks/use-favorites';
 import { useRecentSearches } from '@/hooks/use-recent-searches';
 import { usePredictionHistory } from '@/hooks/use-prediction-history';
+import { useStocks } from '@/hooks/use-stocks';
 import { StockListItem } from '@/components/stock/stock-list-item';
 import { StockSearch } from '@/components/stock/stock-search';
 import { RecentSearches } from '@/components/stock/recent-searches';
@@ -21,8 +24,28 @@ import { PredictionHistoryTable } from '@/components/prediction/prediction-histo
 import { formatCurrency, formatChange, formatPercent, getTrendDirection } from '@/lib/utils/format';
 import { cn } from '@/lib/utils';
 
+// Helper to convert Stock (from live API) to MockStock for compatibility
+function convertStockToMock(stock: Stock): MockStock {
+  return {
+    symbol: stock.symbol,
+    name: stock.name,
+    price: stock.price,
+    change: stock.change,
+    changePercent: stock.changePercent,
+    volume: stock.volume,
+    marketCap: stock.marketCap,
+    prediction: stock.prediction,
+    confidence: stock.confidence,
+    sector: stock.sector,
+    pe: stock.pe,
+    high52w: stock.high52w,
+    low52w: stock.low52w,
+  };
+}
+
 export default function StockMarketApp() {
-  const [selectedStock, setSelectedStock] = useState<MockStock>(MOCK_STOCKS[0]);
+  const [selectedSymbol, setSelectedSymbol] = useState<string>(MOCK_STOCKS[0].symbol);
+  const { stock: selectedStock, loading, error, refetch } = useStocks(selectedSymbol, '1M');
   const [searchQuery, setSearchQuery] = useState('');
 
   const { isInWatchlist, addToWatchlist, removeFromWatchlist } = useWatchlist();
@@ -43,7 +66,7 @@ export default function StockMarketApp() {
 
   const handleStockSelect = useCallback(
     (stock: MockStock) => {
-      setSelectedStock(stock);
+      setSelectedSymbol(stock.symbol);
       setSearchQuery('');
       addRecentSearch(stock.symbol);
     },
@@ -72,6 +95,7 @@ export default function StockMarketApp() {
   );
 
   const handleSavePrediction = useCallback(() => {
+    if (!selectedStock) return;
     const predChangePercent = ((selectedStock.prediction - selectedStock.price) / selectedStock.price) * 100;
     addPrediction({
       symbol: selectedStock.symbol,
@@ -83,7 +107,12 @@ export default function StockMarketApp() {
     });
   }, [selectedStock, addPrediction]);
 
-  const isGaining = selectedStock.change >= 0;
+  // For compatibility with existing components that expect MockStock
+  const displayStock: MockStock = selectedStock 
+    ? convertStockToMock(selectedStock)
+    : MOCK_STOCKS[0];
+
+  const isGaining = displayStock.change >= 0;
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -150,7 +179,7 @@ export default function StockMarketApp() {
                   <StockListItem
                     key={stock.symbol}
                     stock={stock}
-                    isSelected={selectedStock.symbol === stock.symbol}
+                    isSelected={selectedSymbol === stock.symbol}
                     isInWatchlist={isInWatchlist(stock.symbol)}
                     isFavorite={isFavorite(stock.symbol)}
                     onClick={handleStockSelect}
@@ -165,121 +194,166 @@ export default function StockMarketApp() {
 
         {/* ── Right: Detail Panel ──────────────────────────── */}
         <main className="lg:col-span-2 space-y-5" aria-label="Stock detail">
-          {/* Stock header */}
-          <Card>
-            <CardContent className="px-5 py-4">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-                      {selectedStock.symbol}
-                    </h2>
-                    <Badge
-                      variant={isGaining ? 'default' : 'destructive'}
-                      className={cn(
-                        'text-xs',
-                        isGaining
-                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
-                          : ''
-                      )}
-                    >
-                      {formatPercent(selectedStock.changePercent)}
-                    </Badge>
-                    {selectedStock.sector && (
-                      <span className="text-xs text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full">
-                        {selectedStock.sector}
-                      </span>
-                    )}
+          {loading ? (
+            // Skeleton loading state
+            <>
+              <Card>
+                <CardContent className="px-5 py-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="space-y-2">
+                      <Skeleton className="h-8 w-24" />
+                      <Skeleton className="h-4 w-48" />
+                    </div>
+                    <div className="space-y-2 text-right">
+                      <Skeleton className="h-10 w-32" />
+                      <Skeleton className="h-5 w-24" />
+                    </div>
                   </div>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
-                    {selectedStock.name}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <div className="text-3xl font-bold text-slate-900 dark:text-white">
-                    {formatCurrency(selectedStock.price)}
-                  </div>
-                  <div className={cn(
-                    'text-sm font-medium',
-                    isGaining ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
-                  )}>
-                    {formatChange(selectedStock.change)} today
-                  </div>
-                </div>
+                </CardContent>
+              </Card>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[1,2,3,4].map((i) => (
+                  <Card key={i}>
+                    <CardContent className="p-4">
+                      <Skeleton className="h-10 w-full" />
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Metrics row */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <StockMetricCard
-              icon={DollarSign}
-              label="Market Cap"
-              value={selectedStock.marketCap}
-              iconClass="text-blue-600"
-              iconBg="bg-blue-50 dark:bg-blue-950"
-            />
-            <StockMetricCard
-              icon={Activity}
-              label="Volume"
-              value={selectedStock.volume}
-              iconClass="text-emerald-600"
-              iconBg="bg-emerald-50 dark:bg-emerald-950"
-            />
-            <StockMetricCard
-              icon={TrendingUp}
-              label="AI Prediction"
-              value={formatCurrency(selectedStock.prediction)}
-              subValue="7-day target"
-              iconClass="text-purple-600"
-              iconBg="bg-purple-50 dark:bg-purple-950"
-            />
-            <StockMetricCard
-              icon={Target}
-              label="Confidence"
-              value={`${Math.round(selectedStock.confidence * 100)}%`}
-              subValue={selectedStock.confidence >= 0.75 ? 'High' : selectedStock.confidence >= 0.5 ? 'Medium' : 'Low'}
-              iconClass="text-amber-600"
-              iconBg="bg-amber-50 dark:bg-amber-950"
-            />
-          </div>
-
-          {/* Chart */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Price History & Prediction</CardTitle>
-            </CardHeader>
-            <CardContent className="px-4 pb-4">
-              <PriceChart basePrice={selectedStock.price} symbol={selectedStock.symbol} />
-            </CardContent>
-          </Card>
-
-          {/* Prediction card + AI Explanation */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-            <PredictionCard
-              stock={selectedStock}
-              onSavePrediction={handleSavePrediction}
-            />
-            <AIExplanationPanel stock={selectedStock} />
-          </div>
-
-          {/* Prediction History */}
-          {history.length > 0 && (
+              <Card>
+                <CardHeader className="pb-2">
+                  <Skeleton className="h-5 w-40" />
+                </CardHeader>
+                <CardContent className="px-4 pb-4">
+                  <Skeleton className="h-64 w-full" />
+                </CardContent>
+              </Card>
+            </>
+          ) : error ? (
             <Card>
-              <CardHeader className="pb-2">
-                <div className="flex items-center gap-2">
-                  <HistoryIcon className="w-4 h-4 text-slate-400" aria-hidden="true" />
-                  <CardTitle className="text-base">Prediction History</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className="px-4 pb-4">
-                <PredictionHistoryTable history={history} onClear={clearHistory} />
+              <CardContent className="p-6 text-center text-red-500">
+                Error loading data: {error}
               </CardContent>
             </Card>
-          )}
+          ) : (
+            <>
+              {/* Stock header */}
+              <Card>
+                <CardContent className="px-5 py-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+                          {displayStock.symbol}
+                        </h2>
+                        <Badge
+                          variant={isGaining ? 'default' : 'destructive'}
+                          className={cn(
+                            'text-xs',
+                            isGaining
+                              ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                              : ''
+                          )}
+                        >
+                          {formatPercent(displayStock.changePercent)}
+                        </Badge>
+                        {displayStock.sector && (
+                          <span className="text-xs text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full">
+                            {displayStock.sector}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
+                        {displayStock.name}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-3xl font-bold text-slate-900 dark:text-white">
+                        {formatCurrency(displayStock.price)}
+                      </div>
+                      <div className={cn(
+                        'text-sm font-medium',
+                        isGaining ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
+                      )}>
+                        {formatChange(displayStock.change)} today
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-          {/* Financial disclaimer */}
-          <DisclaimerBanner />
+              {/* Metrics row */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <StockMetricCard
+                  icon={DollarSign}
+                  label="Market Cap"
+                  value={displayStock.marketCap}
+                  iconClass="text-blue-600"
+                  iconBg="bg-blue-50 dark:bg-blue-950"
+                />
+                <StockMetricCard
+                  icon={Activity}
+                  label="Volume"
+                  value={displayStock.volume}
+                  iconClass="text-emerald-600"
+                  iconBg="bg-emerald-50 dark:bg-emerald-950"
+                />
+                <StockMetricCard
+                  icon={TrendingUp}
+                  label="AI Prediction"
+                  value={formatCurrency(displayStock.prediction)}
+                  subValue="7-day target"
+                  iconClass="text-purple-600"
+                  iconBg="bg-purple-50 dark:bg-purple-950"
+                />
+                <StockMetricCard
+                  icon={Target}
+                  label="Confidence"
+                  value={`${Math.round(displayStock.confidence * 100)}%`}
+                  subValue={displayStock.confidence >= 0.75 ? 'High' : displayStock.confidence >= 0.5 ? 'Medium' : 'Low'}
+                  iconClass="text-amber-600"
+                  iconBg="bg-amber-50 dark:bg-amber-950"
+                />
+              </div>
+
+              {/* Chart */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base">Price History & Prediction</CardTitle>
+                </CardHeader>
+                <CardContent className="px-4 pb-4">
+                  <PriceChart basePrice={displayStock.price} symbol={displayStock.symbol} />
+                </CardContent>
+              </Card>
+
+              {/* Prediction card + AI Explanation */}
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                <PredictionCard
+                  stock={displayStock}
+                  onSavePrediction={handleSavePrediction}
+                />
+                <AIExplanationPanel stock={displayStock} />
+              </div>
+
+              {/* Prediction History */}
+              {history.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center gap-2">
+                      <HistoryIcon className="w-4 h-4 text-slate-400" aria-hidden="true" />
+                      <CardTitle className="text-base">Prediction History</CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="px-4 pb-4">
+                    <PredictionHistoryTable history={history} onClear={clearHistory} />
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Financial disclaimer */}
+              <DisclaimerBanner />
+            </>
+          )}
         </main>
       </div>
     </div>

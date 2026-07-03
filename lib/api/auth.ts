@@ -46,6 +46,22 @@ export async function signIn(email: string, password: string) {
   return data;
 }
 
+export async function signInWithGoogle() {
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: window.location.origin,
+      scopes: 'email profile',
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'consent'
+      }
+    }
+  });
+  if (error) throw error;
+  return data;
+}
+
 export async function signOut() {
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
@@ -71,12 +87,32 @@ export async function updatePassword(newPassword: string) {
 }
 
 export function onAuthStateChange(callback: (user: AuthUser | null) => void) {
-  const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
     if (session?.user) {
+      // For OAuth users, make sure we create their profile if it doesn't exist
+      const name = session.user.user_metadata.name || session.user.email?.split('@')[0] || '';
+      const avatar_url = session.user.user_metadata.avatar_url || '';
+      
+      try {
+        await createUserProfile({
+          id: session.user.id,
+          name,
+          bio: '',
+          location: '',
+          phone: '',
+          avatar_url
+        });
+        
+        await createUserPreferences(session.user.id);
+      } catch (err) {
+        // Ignore errors if profile already exists
+        console.log('Profile may already exist:', err);
+      }
+      
       callback({
         id: session.user.id,
         email: session.user.email || '',
-        name: session.user.user_metadata.name
+        name
       });
     } else {
       callback(null);

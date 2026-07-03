@@ -2,10 +2,31 @@
 
 import { memo, useCallback } from 'react';
 import { Heart, TrendingUp, TrendingDown, Plus, Check } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { formatCurrency, formatChange, formatPercent } from '@/lib/utils/format';
 import { MockStock } from '@/lib/constants';
+import { Stock } from '@/lib/types';
+import { useStocks } from '@/hooks/use-stocks';
+
+// Helper to convert Stock (from live API) to MockStock for compatibility
+function convertStockToMock(stock: Stock): MockStock {
+  return {
+    symbol: stock.symbol,
+    name: stock.name,
+    price: stock.price,
+    change: stock.change,
+    changePercent: stock.changePercent,
+    volume: stock.volume,
+    marketCap: stock.marketCap,
+    prediction: stock.prediction,
+    confidence: stock.confidence,
+    sector: stock.sector,
+    pe: stock.pe,
+    high52w: stock.high52w,
+    low52w: stock.low52w,
+  };
+}
 
 interface StockListItemProps {
   stock: MockStock;
@@ -18,7 +39,7 @@ interface StockListItemProps {
 }
 
 export const StockListItem = memo(function StockListItem({
-  stock,
+  stock: initialStock,
   isSelected,
   isInWatchlist,
   isFavorite,
@@ -26,17 +47,48 @@ export const StockListItem = memo(function StockListItem({
   onWatchlistToggle,
   onFavoriteToggle,
 }: StockListItemProps) {
-  const isGaining = stock.change >= 0;
+  // Fetch live data for this stock
+  const { stock: liveStock, loading } = useStocks(initialStock.symbol, '1M');
+  
+  const displayStock: MockStock = liveStock 
+    ? convertStockToMock(liveStock)
+    : initialStock;
+  
+  const isGaining = displayStock.change >= 0;
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        onClick(stock);
+        onClick(displayStock);
       }
     },
-    [onClick, stock]
+    [onClick, displayStock]
   );
+
+  if (loading) {
+    return (
+      <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50">
+        <div className="flex items-start justify-between mb-3">
+          <div className="min-w-0 space-y-2">
+            <Skeleton className="h-5 w-20" />
+            <Skeleton className="h-3 w-32" />
+          </div>
+        </div>
+        <div className="flex items-end justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-24" />
+            <Skeleton className="h-4 w-20" />
+          </div>
+          <div className="space-y-1 text-right">
+            <Skeleton className="h-3 w-16" />
+            <Skeleton className="h-4 w-12" />
+            <Skeleton className="h-3 w-12" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -51,28 +103,28 @@ export const StockListItem = memo(function StockListItem({
           ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/60 shadow-sm'
           : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50'
       )}
-      onClick={() => onClick(stock)}
+      onClick={() => onClick(displayStock)}
       onKeyDown={handleKeyDown}
     >
       <div className="flex items-start justify-between mb-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className="font-bold text-base text-slate-900 dark:text-white">{stock.symbol}</h3>
+            <h3 className="font-bold text-base text-slate-900 dark:text-white">{displayStock.symbol}</h3>
             <span className="text-xs text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded">
-              {stock.sector?.split(' ')[0]}
+              {displayStock.sector?.split(' ')[0]}
             </span>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
-            {stock.name}
+            {displayStock.name}
           </p>
         </div>
 
         <div className="flex items-center gap-1 flex-shrink-0 ml-2">
           {/* Favorite toggle */}
           <button
-            aria-label={isFavorite ? `Remove ${stock.symbol} from favorites` : `Add ${stock.symbol} to favorites`}
+            aria-label={isFavorite ? `Remove ${displayStock.symbol} from favorites` : `Add ${displayStock.symbol} to favorites`}
             aria-pressed={isFavorite}
-            onClick={(e) => { e.stopPropagation(); onFavoriteToggle(stock.symbol); }}
+            onClick={(e) => { e.stopPropagation(); onFavoriteToggle(displayStock.symbol); }}
             className={cn(
               'p-1.5 rounded-md transition-colors opacity-0 group-hover:opacity-100',
               'focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-blue-500',
@@ -90,9 +142,9 @@ export const StockListItem = memo(function StockListItem({
 
           {/* Watchlist toggle */}
           <button
-            aria-label={isInWatchlist ? `Remove ${stock.symbol} from watchlist` : `Add ${stock.symbol} to watchlist`}
+            aria-label={isInWatchlist ? `Remove ${displayStock.symbol} from watchlist` : `Add ${displayStock.symbol} to watchlist`}
             aria-pressed={isInWatchlist}
-            onClick={(e) => { e.stopPropagation(); onWatchlistToggle(stock); }}
+            onClick={(e) => { e.stopPropagation(); onWatchlistToggle(displayStock); }}
             className={cn(
               'p-1.5 rounded-md transition-colors',
               'focus-visible:ring-2 focus-visible:ring-blue-500',
@@ -113,7 +165,7 @@ export const StockListItem = memo(function StockListItem({
       <div className="flex items-end justify-between">
         <div>
           <div className="text-xl font-bold text-slate-900 dark:text-white">
-            {formatCurrency(stock.price)}
+            {formatCurrency(displayStock.price)}
           </div>
           <div
             className={cn(
@@ -126,8 +178,8 @@ export const StockListItem = memo(function StockListItem({
             ) : (
               <TrendingDown className="w-3.5 h-3.5" aria-hidden="true" />
             )}
-            <span aria-label={`${isGaining ? 'Up' : 'Down'} ${Math.abs(stock.change).toFixed(2)} dollars, ${Math.abs(stock.changePercent).toFixed(2)} percent`}>
-              {formatChange(stock.change)} ({formatPercent(stock.changePercent)})
+            <span aria-label={`${isGaining ? 'Up' : 'Down'} ${Math.abs(displayStock.change).toFixed(2)} dollars, ${Math.abs(displayStock.changePercent).toFixed(2)} percent`}>
+              {formatChange(displayStock.change)} ({formatPercent(displayStock.changePercent)})
             </span>
           </div>
         </div>
@@ -135,10 +187,10 @@ export const StockListItem = memo(function StockListItem({
         <div className="text-right">
           <div className="text-xs text-slate-400 dark:text-slate-500">AI Target</div>
           <div className="text-sm font-semibold text-blue-600 dark:text-blue-400">
-            {formatCurrency(stock.prediction)}
+            {formatCurrency(displayStock.prediction)}
           </div>
           <div className="text-xs text-slate-400 dark:text-slate-500">
-            {Math.round(stock.confidence * 100)}% conf.
+            {Math.round(displayStock.confidence * 100)}% conf.
           </div>
         </div>
       </div>

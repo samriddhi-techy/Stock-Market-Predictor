@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { getCurrentUser, onAuthStateChange, signIn as apiSignIn, signOut as apiSignOut, signUp as apiSignUp } from '@/lib/api/auth';
+import { getCurrentUser, onAuthStateChange, signIn as apiSignIn, signOut as apiSignOut, signUp as apiSignUp, signInWithGoogle as apiSignInWithGoogle } from '@/lib/api/auth';
 import { getUserProfile } from '@/lib/api/profile';
 
 interface User {
@@ -16,6 +16,7 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (name: string, email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   isAuthenticated: boolean;
 }
@@ -76,6 +77,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await apiSignUp(email, password, name);
   }
 
+  async function signInWithGoogle() {
+    await apiSignInWithGoogle();
+  }
+
   async function signOut() {
     await apiSignOut();
     setUser(null);
@@ -87,6 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       signIn,
       signUp,
+      signInWithGoogle,
       signOut,
       isAuthenticated: !!user
     }}>
